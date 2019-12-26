@@ -1,0 +1,153 @@
+.login{
+    &-bg{
+        background-color: rgba(249,249,249,1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: url("../images/login.png");
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: cover;
+        min-width: 580px;
+        min-height: 680px;
+    }
+    &-box{
+        width:560px;
+        height:500px;
+        background:rgba(255,255,255,1);
+        box-shadow:0px 2px 40px 0px rgba(24,144,255,0.15);
+        border-radius:12px;
+        overflow: hidden;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
+    &-title{
+        font-size:36px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(74,144,226,1);
+        line-height:50px;
+        margin-top: 40px;
+        text-align: center;
+    }
+    &-item{
+        position: relative;
+    }
+    &-item &-input{
+        margin-top: 48px;
+    }
+    &-item ~ &-item &-input{
+        margin-top: 25px;
+    }
+    &-error &-input{
+        border-bottom-color: #EB474A;
+    }
+    &-error &-error-label{
+        opacity: 1;
+        transform: translateX(0);
+    }
+    &-error-label{
+        font-size:14px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(235,71,74,1);
+        line-height:20px;
+        position: absolute;
+        right: 0;
+        bottom: -27px;
+        opacity: 0;
+        transform: translateX(20px);
+        transition: opacity 240ms ease,transform 240ms ease;
+    }
+    &-input{
+        width:400px;
+        height: 54px;
+        border-radius: 0;
+        border-top:none;
+        border-left:none;
+        border-right:none;
+        border-bottom-color: #979797;
+        box-shadow: none!important;
+        padding-left: 0;
+        line-height: 22px;
+        font-size:20px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(0,0,0,1);
+        &:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #fff inset!important;
+        }
+        &-label{
+            position: absolute;
+            font-size:20px;
+            font-family:PingFangSC-Regular,PingFang SC;
+            font-weight:400;
+            color:rgba(0,0,0,1);
+            opacity: 0.25;
+            bottom: 16px;
+            left: 0;
+            pointer-events: none;
+            transition: opacity 300ms ease,font-size 300ms ease,bottom 300ms ease;
+            &-value{
+                font-size:14px;
+                opacity: .5;
+                bottom: 46px;
+            }
+        }
+    }
+    &-btn{
+        width:400px;
+        height:64px;
+        background:rgba(74,144,226,1);
+        border-radius:3px;
+        font-size:24px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(255,255,255,1);
+        margin-top: 50px;
+        &[disabled]{
+            background-color: rgba(0,0,0,1);
+            color: rgba(255,255,255,1);
+            opacity: .25;
+            &:hover{
+                background-color: rgba(0,0,0,1);
+                color: rgba(255,255,255,1);
+                opacity: .25;
+            }
+        }
+    }
+    &-remember{
+        margin-top: 31px;
+        font-size:16px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(0,0,0,0.85);
+        line-height:22px;
+        align-self: start;
+        margin-left: 80px;
+        user-select: none;
+    }
+
+    &-logo{
+        font-size:24px;
+        font-family:PingFangSC-Regular,PingFang SC;
+        font-weight:400;
+        color:rgba(28,28,28,1);
+        line-height:33px;
+        position: absolute;
+        top: 40px;
+        left: 40px;
+        display: flex;
+        align-items: center;
+        &:before{
+            content:"";
+            display: inline-block;
+            width: 106px;
+            height: 33px;
+            background: url("../images/logo.png") no-repeat center;
+            background-size: contain;
+            margin-right: 11px;
+        }
+    }
+}
