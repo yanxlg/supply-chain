@@ -33,7 +33,7 @@ const config: IConfig = {
             antd: true,
             dva: true,
             dynamicImport: { webpackChunkName: true },
-            title: 'sc',
+            title: '供应链管理中台',
             dll: true,
             locale: {
                 enable: false,
@@ -51,6 +51,13 @@ const config: IConfig = {
             },
         }],
     ],
+    proxy: {
+        '/api': {
+            target: 'https://pos-t.vova.com.hk/',
+            changeOrigin: true,
+            pathRewrite: { '^/api': '' },
+        },
+    },
 };
 
 export default config;

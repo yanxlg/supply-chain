@@ -9,3 +9,6 @@ rules:
     no-debugger: true
     no-reference: true
     jsx-no-multiline-js: false
+    jsx-wrap-multiline: false
+    jsx-alignment: false
+    jsx-no-lambda: false

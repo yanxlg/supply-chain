@@ -13,7 +13,8 @@
         "antd": "^3.19.5",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
-        "lodash-decorators": "^6.0.1"
+        "lodash-decorators": "^6.0.1",
+        "mockjs": "^1.1.0"
     },
     "devDependencies": {
         "@types/jest": "^23.3.12",
@@ -36,7 +37,10 @@
         "umi": "^2.9.0",
         "umi-plugin-react": "^1.8.0",
         "umi-types": "^0.3.0",
-        "sha.js": "^2.4.11"
+        "sha.js": "^2.4.11",
+        "express": "^4.17.1",
+        "@types/express": "^4.17.0",
+        "umi-request": "^1.2.17"
     },
     "lint-staged": {
         "*.{ts,tsx}": [
