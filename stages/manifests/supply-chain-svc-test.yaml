@@ -1,0 +1,182 @@
+# frontend-supply-chain-page
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-supply-chain-page-nginx-conf
+data:
+  nginx.conf: |
+    user  www-data;
+    worker_processes  1;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+    events {
+        worker_connections  1024;
+    }
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format apache_format '$remote_addr - $remote_user [$time_local] "$request" '
+                           '$status $body_bytes_sent "$http_referer" '
+                           '"$http_user_agent"'
+                           ' "$http_x_forwarded_for" $host'
+                           ' "$upstream_cache_status" '
+                           ' $request_time';
+
+
+        access_log  /var/log/nginx/access.log  apache_format;
+        sendfile        on;
+        #tcp_nopush     on;
+        keepalive_timeout  65;
+        #gzip  on;
+        include /etc/nginx/conf.d/*.conf;
+    }
+  frontend-supply-chain-page.conf: |
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        access_log  /var/log/nginx/access.log  apache_format;
+        set $prjroot /usr/share/nginx/html;
+        index index.html;
+        location ~ /version {
+            root $prjroot/;
+            add_header Content-Type text/plain;
+        }
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /api/{
+            add_header Access-Control-Allow-Origin *;
+            rewrite ^/api(.*)$ /$1 break;
+            proxy_pass https://pos-t.vova.com.hk/;
+        }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-supply-chain-page
+  labels:
+    name: frontend-supply-chain-page
+spec:
+  selector:
+    matchLabels:
+      name: frontend-supply-chain-page
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      name: frontend-supply-chain-page
+      labels:
+        name: frontend-supply-chain-page
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: frontend-supply-chain-page
+          image: 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http-port
+          volumeMounts:
+            - name: frontend-supply-chain-page-conf
+              mountPath: /etc/nginx/conf.d
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: nginx-log
+              mountPath: /var/log/nginx
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 80
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /version
+              port: 80
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+      volumes:
+        - name: nginx-log
+          hostPath:
+            path: /opt/data1/logs/supply-chain/nginx
+        - name: nginx-conf
+          configMap:
+            name: frontend-supply-chain-page-nginx-conf
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+        - name: frontend-supply-chain-page-conf
+          configMap:
+            name: frontend-supply-chain-page-conf
+            items:
+              - key: frontend-supply-chain-page.conf
+                path: frontend-supply-chain-page.conf
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: name
+                      operator: In
+                      values:
+                        - frontend-supply-chain-page
+                topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-supply-chain-page-svc
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  selector:
+    name: frontend-supply-chain-page
+  ports:
+    - name: entry
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: aws-alb-supply-chain
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
+    alb.ingress.kubernetes.io/certificate-arn:  arn:aws:acm:us-east-1:724258426085:certificate/72dafeb0-99e6-4b84-a43c-466641f76c63
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/success-codes: '200,302'
+    alb.ingress.kubernetes.io/security-groups: 'sg-00f93e4d234a5ca8b'
+    alb.ingress.kubernetes.io/subnets: 'subnet-4eef3b61,subnet-2064f56b,subnet-b31bd2ee'
+spec:
+  rules:
+    - host: schain-t.vova.com.hk
+      http:
+        paths:
+          - backend:
+              serviceName: ssl-redirect
+              servicePort: use-annotation
+          - path: /*
+            backend:
+              serviceName: frontend-supply-chain-page-svc
+              servicePort: 80

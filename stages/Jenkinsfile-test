@@ -1,0 +1,88 @@
+def docker_login = 'aws ecr get-login --no-include-email --region us-east-1'
+
+pipeline {
+    agent {
+        label 'deployer-fd-test'
+    }
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        ansiColor('vga')
+        buildDiscarder(logRotator(daysToKeepStr: '30', numToKeepStr: '100'))
+    }
+    parameters {
+        string(name: 'refspec',
+            defaultValue: 'master',
+            description: 'which branch or commit id?'
+        )
+        booleanParam(name: 'NpmInstall',
+            defaultValue: false,
+            description: 'Need run npm install?'
+        )
+    }
+    stages {
+        stage('docker login') {
+            agent {
+                label 'deployer-fd-test'
+            }
+            options {
+                skipDefaultCheckout true
+            }
+            steps {
+                script {
+                    docker_login = sh(returnStdout: true, script: 'aws ecr get-login --no-include-email --region us-east-1')
+                }
+            }
+        }
+        stage('Building image') {
+            agent {
+                label 'deployer-fd-test'
+            }
+            options {
+                skipDefaultCheckout true
+            }
+            steps {
+                script {
+                    checkout([ $class: 'GitSCM',
+                               branches: [[name: "$refspec"]],
+                               userRemoteConfigs: [[url: 'ssh://git@git.gitvv.com:38022/frontend/supply-chain.git', credentialsId: 'b86f9919-deee-4bdf-94fc-c81fa69186c2',]]])
+                    if (NpmInstall == "true") {
+                        sh "docker run -u 0 --rm -v \$(pwd):/opt/app-root/src --name supply-chain-build node:10 bash -c 'cd /opt/app-root/supply-chain;npm install'"
+                    }
+                    sh "docker run --rm -v \$(pwd):/opt/app-root/supply-chain --name supply-chain-build node:10 bash -c 'cd /opt/app-root/supply-chain;npm run build'; \
+                        sudo chown -R ec2-user.ec2-user \$(pwd); \
+                        git rev-parse --short HEAD > dist/version; \
+                    "
+                    sh "${docker_login}"
+                    sh "docker build --no-cache --network=host -f Dockerfile -t 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page .; \
+                        docker push 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page; \
+                        docker tag 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain; \
+                        docker push 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain; \
+                        docker rmi 724258426085.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page; \
+                       "
+                }
+            }
+        }
+        stage('restart pod') {
+            agent {
+                label 'deployer-fd-test'
+            }
+            options {
+                skipDefaultCheckout true
+            }
+            steps {
+                script {
+                    checkout([ $class: 'GitSCM',
+                               branches: [[name: "$refspec"]],
+                               userRemoteConfigs: [[url: 'ssh://git@git.gitvv.com:38022/frontend/supply-chain.git', credentialsId: 'b86f9919-deee-4bdf-94fc-c81fa69186c2',]]])
+                    sh """export KUBECONFIG=~/.kube/vv-servicet-v1-config; \
+                          kubectl apply -f stages/manifests/supply-chain-svc-test.yaml; \
+                          kubectl get pod -n default | grep 'frontend-supply-chain-page' | awk '{print \$1}' \
+                              | while read podName; do kubectl get pod \$podName -n default -o yaml \
+                              | kubectl replace --force -f -; done; \
+                    """
+                }
+            }
+        }
+    }
+}
