@@ -142,7 +142,7 @@ kind: Service
 metadata:
   name: frontend-supply-chain-page-svc
   annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-path: /version
 spec:
   selector:
     name: frontend-supply-chain-page
