@@ -24,14 +24,14 @@ declare interface IFilterProps extends IBaseFilterProps {
 export async function getOrderList(params: IFilterProps) {
     return request.get(ApiPathEnum.GetOrderList, {
         requestType: 'form',
-        data: params,
+        params: params,
     });
 }
 
 export async function filterOrder(params: IFilterProps) {
     return request.get(ApiPathEnum.FilterOrder, {
         requestType: 'form',
-        data: params,
+        params: params,
     });
 }
 
@@ -69,7 +69,7 @@ export async function manualCreatePurchaseOrder(params:{salesOrderGoodsSns:strin
 export async function exportOrderList(params: IBaseFilterProps) {
     return request.get(ApiPathEnum.ExportOrder, {
         requestType: 'form',
-        data: params,
+        params: params,
         responseType:"blob",
         parseResponse:false
     }).then((response)=>{

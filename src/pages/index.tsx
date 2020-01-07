@@ -34,11 +34,12 @@ declare interface IDataItem {
     'pdd_order_time': string,
     'purchase_tracking_number': string,
     'style_values': string;
+    purchase_shipping_status:string;
 
-    purchase_order_desc: string;
+    purchase_order_remark: string;
 
     _purchase_tracking_number?: string;
-    _purchase_order_desc?: string;
+    _purchase_order_remark?: string;
 }
 
 
@@ -70,10 +71,11 @@ declare interface IIndexState {
     total: number;
     dataSet: IDataItem[];
 
-    searchLoading:boolean;
-    refreshLoading:boolean;
-    exportLoading:boolean;
-    dataLoading:boolean;
+    searchLoading: boolean;
+    refreshLoading: boolean;
+    exportLoading: boolean;
+    dataLoading: boolean;
+    updateTrackingNumberLoading: boolean;
     patBtnLoading: boolean;// 拍单按钮loading
     selectedRowKeys: number[];
 }
@@ -102,9 +104,11 @@ class Index extends React.PureComponent<{}, IIndexState> {
             pageSize: 100,
             total: 0,
             patBtnLoading: false,
-            dataLoading:false,
-            searchLoading:false,
-            refreshLoading:false,
+            dataLoading: false,
+            searchLoading: false,
+            refreshLoading: false,
+            exportLoading: false,
+            updateTrackingNumberLoading: false,
             dataSet: [],
             selectedRowKeys: [],
         };
@@ -243,34 +247,47 @@ class Index extends React.PureComponent<{}, IIndexState> {
     }
 
     private onPageChange(page: number, pageSize?: number) {
-        // 调用接口获取数据，然后更新
-        this.setState({
-            pageNumber: page,
-        }, () => {
-            this.onFilter();
+        this.onFilter({
+            page: page,
+            refreshLoading: false,
+        }).finally(() => {
+
         });
     }
 
     private onShowSizeChange(page: number, size: number) {
-        this.setState({
-            pageSize: size,
-        }, () => {
-            this.onFilter();
+        this.onFilter({
+            page: page,
+            refreshLoading: false,
+            size: size,
+        }).finally(() => {
+
         });
     }
 
     private onSearch() {
         this.setState({
-            pageNumber: 1,
-        }, () => {
-            this.onFilter();
+            searchLoading: true,
+        });
+        this.onFilter({
+            page: 1,
+            refreshLoading: false,
+        }).finally(() => {
+            this.setState({
+                searchLoading: false,
+            });
         });
     }
 
-    private onFilter() {
+    private onRefresh() {
+        this.onFilter();
+    }
+
+    private onFilter({ page, refreshLoading = true, size }: { page: number; refreshLoading?: boolean; size?: number } = {
+        page: this.state.pageNumber,
+    }) {
         const {
             pageSize,
-            pageNumber,
             pddShippingStatus,
             pddPayStatus,
             pddOrderStatus,
@@ -285,11 +302,13 @@ class Index extends React.PureComponent<{}, IIndexState> {
             pddShippingNumbers,
         } = this.state;
         this.setState({
-            dataLoading:true
+            dataLoading: true,
+            refreshLoading: refreshLoading,
         });
-        filterOrder({
-            page: pageNumber,
-            size: pageSize,
+        const nextPageSize = size || pageSize;
+        return filterOrder({
+            page: page,
+            size: nextPageSize,
             pddShippingStatus,
             pddPayStatus,
             pddOrderStatus,
@@ -306,11 +325,15 @@ class Index extends React.PureComponent<{}, IIndexState> {
             this.setState({
                 dataSet: list,
                 total: total,
+                pageNumber: page,
+                pageSize: nextPageSize,
+                selectedRowKeys:[]
             });
-        }).finally(()=>{
+        }).finally(() => {
             this.setState({
-                dataLoading:false
-            })
+                dataLoading: false,
+                refreshLoading: false,
+            });
         });
     }
 
@@ -320,7 +343,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             patBtnLoading: true,
         });
         if (patting) {
-            // 停止拍单
+            // 停止拍单  不做，代码保留
             new Promise((resolve) => {
                 setTimeout(() => {
                     resolve();
@@ -343,11 +366,11 @@ class Index extends React.PureComponent<{}, IIndexState> {
             manualCreatePurchaseOrder({
                 salesOrderGoodsSns: salesOrderGoodsSns,
             }).then(() => {
-                this.setState({
+      /*          this.setState({
                     patting: true,
                     patLength: 100,
                     patAccess: 10,
-                });
+                });*/
             }).finally(() => {
                 this.setState({
                     patBtnLoading: false,
@@ -372,7 +395,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             pddShippingNumbers,
         } = this.state;
         this.setState({
-            exportLoading:true
+            exportLoading: true,
         });
         exportOrderList({
             pddShippingStatus,
@@ -391,30 +414,43 @@ class Index extends React.PureComponent<{}, IIndexState> {
             // 下载成功
         }).catch(() => {
             // 下载失败
-        }).finally(()=>{
+        }).finally(() => {
             this.setState({
-                exportLoading:false
+                exportLoading: false,
             });
         });
     }
 
-    private updateRecord(record: IDataItem) {
+    private updateTrackingNumber(record: IDataItem) {
+        this.setState({
+            updateTrackingNumberLoading: true,
+        });
         modifyOrderInfo({
             purchaseTrackingNumber: record._purchase_tracking_number,
             salesOrderGoodsSn: record.order_goods_sn,
         }).then(() => {
-            // 修改成功后刷新当前页面
             this.onFilter();
+        }).finally(() => {
+            this.setState({
+                updateTrackingNumberLoading: false,
+            });
         });
     }
 
     private modifyMark(record: IDataItem) {
+        this.setState({
+            dataLoading:true
+        });
         modifyMark({
             salesOrderGoodsSn: record.order_goods_sn,
-            remark: record._purchase_order_desc || '',
+            remark: record._purchase_order_remark || '',
         }).then(() => {
             // 修改成功后刷新当前页面
             this.onFilter();
+        }).catch(()=>{
+            this.setState({
+                dataLoading:false
+            });
         });
     }
 
@@ -449,34 +485,29 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 title: '订单时间',
                 width: '126px',
                 dataIndex: 'pdd_order_time',
-                key: 'pdd_order_time',
                 align: 'center',
             },
             {
                 title: '订单ID',
                 dataIndex: 'order_goods_sn',
-                key: 'order_goods_sn',
                 width: '178px',
                 align: 'center',
             },
             {
                 title: 'Goods id',
                 dataIndex: 'vova_goods_id',
-                key: 'vova_goods_id',
                 width: '182px',
                 align: 'center',
             },
             {
                 title: 'sku id',
                 dataIndex: 'pdd_sku',
-                key: 'pdd_sku',
                 width: '223px',
                 align: 'center',
             },
             {
                 title: '商品图片',
                 dataIndex: 'image_url',
-                key: 'image_url',
                 width: '106px',
                 align: 'center',
                 render: (img: string) => <img src={img} className="goods-image"/>,
@@ -484,73 +515,75 @@ class Index extends React.PureComponent<{}, IIndexState> {
             {
                 title: '商品信息',
                 dataIndex: 'style_values',
-                key: 'style_values',
                 width: '200px',
                 align: 'center',
             },
             {
                 title: '数量',
-                dataIndex: 'sales_total_amount',
-                key: 'sales_total_amount',
+                dataIndex: 'goods_number',
                 width: '100px',
                 align: 'center',
             },
             {
                 title: '实付',
-                dataIndex: 'purchase_currency',
-                key: 'purchase_currency',
+                dataIndex: 'sales_total_amount',
                 width: '105px',
                 align: 'center',
             },
             {
                 title: '拍单价',
-                dataIndex: 'sales_currency',
-                key: 'sales_currency',
+                dataIndex: 'purchase_total_amount',
                 width: '105px',
                 align: 'center',
             },
-            {
+    /*        {
                 title: '收入核算',
                 dataIndex: 'purchase_total_amount',
-                key: 'purchase_total_amount',
                 width: '105px',
                 align: 'center',
-            },
+            },*/
             {
                 title: '供应链订单状态',
                 dataIndex: 'sales_order_status',
-                key: 'sales_order_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) => text === '1' ? '已确认' : text === '2' ? '已取消' : '',
+                render: (text: string) =>{
+                    const status = String(text);
+                    return  status === '1' ? '已确认' : status === '2' ? '已取消' : ''
+                },
             },
             {
                 title: '采购订单状态',
                 dataIndex: 'purchase_order_status',
-                key: 'purchase_order_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) => text === '0' ? '未拍单' : text === '2' ? '已取消' : text === '4' ? '拍单失败' : text === '1' ? '已拍单' : '',
+                render: (text: string) => {
+                    const status = String(text);
+                    return status === '0' ? '未拍单' : status === '2' ? '已取消' : status === '4' ? '拍单失败' : status === '1' ? '已拍单' : ''
+                },
             },
             {
                 title: '采购支付状态',
                 dataIndex: 'purchase_pay_status',
-                key: 'purchase_pay_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) => text === '0' ? '未支付' : text === '2' ? '已支付' : text === '31' ? '审核不通过完结' : text === '30' ? '待审核' : text === '3' ? '待退款' : text === '4' ? '已退款' : '',
+                render: (text: string) => {
+                    const status = String(text);
+                    return status === '0' ? '未支付' : status === '2' ? '已支付' : status === '31' ? '审核不通过完结' : status === '30' ? '待审核' : status === '3' ? '待退款' : status === '4' ? '已退款' : '';
+                }
             },
             {
                 title: '采购配送状态',
                 dataIndex: 'purchase_shipping_status',
-                key: 'purchase_shipping_status',
                 width: '218px',
                 align: 'center',
-                render: (text: string) => text === '0' ? '未发货' : text === '1' ? '已发货' : text === '2' ? '已签收' : '',
+                render: (text: string) => {
+                    const status = String(text);
+                    return status === '0' ? '未发货' : status === '1' ? '已发货' : status === '2' ? '已签收' : '';
+                }
             },
             {
                 title: '操作',
-                key: 'operation',
                 width: '105px',
                 align: 'center',
                 render: (text: any, record: IDataItem) => {
@@ -559,14 +592,19 @@ class Index extends React.PureComponent<{}, IIndexState> {
                     // 采购支付状态：已退款 =>钱款去向
                     const payStatus = String(record.purchase_pay_status);
                     const orderStatus = String(record.purchase_order_status);
-                    if (payStatus === '4') {
+                    const shipStatus = String(record.purchase_shipping_status);
+                    const saleStatus = String(record.sales_order_status);
+                   /* if (payStatus === '4') {
                         return <Button type="link" className="button-link">钱款去向</Button>;
-                    }
+                    }*/
+                   /* if(shipStatus === '1' || shipStatus === '2'){
+                        return <Button type="link" className="button-link">物流配送</Button>;
+                    }*/
                     if (orderStatus === '0') {
                         return <Button type="link" className="button-link"
                                        onClick={() => this.manualCreatePurchaseOrder(record.order_goods_sn)}>拍单</Button>;
                     }
-                    if (orderStatus === '4') {
+                    if (orderStatus === '4' || saleStatus==='1' && orderStatus==='2') {
                         return <Button type="link" className="button-link"
                                        onClick={() => this.manualCreatePurchaseOrder(record.order_goods_sn)}>重新拍单</Button>;
                     }
@@ -575,49 +613,55 @@ class Index extends React.PureComponent<{}, IIndexState> {
             },
             {
                 title: '取消订单',
-                key: 'cancel',
                 width: '105px',
                 align: 'center',
-                render: (text: any, record: IDataItem) => (String(record.purchase_order_status) === '2' || String(record.purchase_pay_status) === '2') ?
-                    null :
-                    <Button type="link" className="button-link" onClick={() => this.cancelOrder(record)}>取消</Button>,//已取消或者支付状态已支付 不显示
+                render: (text: any, record: IDataItem) => {
+                    const orderStatus = String(record.purchase_order_status);
+                    const payStatus = String(record.purchase_pay_status);
+                    return (orderStatus === '2' || payStatus === '2') ?
+                        null :
+                        <Button type="link" className="button-link" onClick={() => this.cancelOrder(record)}>取消</Button>;//已取消或者支付状态已支付 不显示
+                },
             },
             {
                 title: '采购时间',
                 dataIndex: 'purchase_pay_time',
-                key: 'purchase_pay_time',
                 width: '126px',
                 align: 'center',
             },
             {
                 title: '采购订单号',
                 dataIndex: 'pdd_order_sn',
-                key: 'pdd_order_sn',
                 width: '245px',
                 align: 'center',
             },
             {
                 title: '采购运单号',
                 dataIndex: 'purchase_tracking_number',
-                key: 'purchase_tracking_number',
                 width: '245px',
                 align: 'center',
                 render: (value: string, record: IDataItem) => {
                     // 未拍单和已取消的不可编辑
                     const status = String(record.purchase_order_status);
-                    const disabled = status === '0' || status === '2';
+                    const disabled = status === '0' || status === '2' || status === '4';
+                    const { updateTrackingNumberLoading } = this.state;
                     return (
-                        <div>
-                            <Input.TextArea disabled={disabled}
-                                            value={record._purchase_tracking_number || record.purchase_tracking_number}
-                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                                                record._purchase_tracking_number = e.target.value;
-                                                this.forceUpdate();
-                                            }}
-                                            className="textarea-edit"/>
+                        <div className="data-grid-edit-wrap">
+                            <Input.TextArea
+                                disabled={disabled}
+                                value={record._purchase_tracking_number || record.purchase_tracking_number}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                    record._purchase_tracking_number = e.target.value;
+                                    this.forceUpdate();
+                                }}
+                                className="textarea-edit"
+                            />
                             {
                                 record._purchase_tracking_number && !disabled ?
-                                    <Button type="primary" onClick={() => this.updateRecord(record)}>保存</Button> : null
+                                    <Button
+                                        loading={updateTrackingNumberLoading}
+                                        type="link" className="button-link data-grid-edit"
+                                        onClick={() => this.updateTrackingNumber(record)}>保存</Button> : null
                             }
                         </div>
                     );
@@ -625,23 +669,22 @@ class Index extends React.PureComponent<{}, IIndexState> {
             },
             {
                 title: '备注',
-                dataIndex: 'purchase_order_desc',
-                key: 'purchase_order_desc',
+                dataIndex: 'purchase_order_remark',
                 width: '245px',
                 align: 'center',
                 render: (value: string, record: IDataItem) => {
                     return (
-                        <div>
+                        <div className="data-grid-edit-wrap">
                             <Input.TextArea
-                                value={record._purchase_order_desc || record.purchase_order_desc}
+                                value={record._purchase_order_remark || record.purchase_order_remark}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                                    record._purchase_order_desc = e.target.value;
+                                    record._purchase_order_remark = e.target.value;
                                     this.forceUpdate();
                                 }}
                                 className="textarea-edit"/>
                             {
-                                record._purchase_order_desc &&
-                                <Button type="primary" onClick={() => this.modifyMark(record)}>保存</Button>
+                                record._purchase_order_remark &&
+                                <Button type="link" className="button-link data-grid-edit" onClick={() => this.modifyMark(record)}>保存</Button>
                             }
                         </div>
                     );
@@ -655,7 +698,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
     };
 
     render() {
-        const {exportLoading,searchLoading, refreshLoading, dataLoading,patting, patAccess, patLength, pddAccount, storeAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, storeAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '100px',
@@ -680,7 +723,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
                                 {pddAccount}
                             </span>
                             <Button className="button-1">进入个人中心</Button>
-                            <Button className="button-1 button-2" type={'primary'}>同步拍单信息</Button>
+                            {/*<Button className="button-1 button-2" type={'primary'}>同步拍单信息</Button>*/}
                         </div>
                         <div className="card-item">
                             <label className="label-1">商家账号：</label>
@@ -813,10 +856,12 @@ class Index extends React.PureComponent<{}, IIndexState> {
                             </div>
                         </div>
                         <div className="row">
-                            <Button loading={searchLoading} disabled={refreshLoading} type={'primary'} className="button-search" onClick={this.onSearch}>
+                            <Button loading={searchLoading} disabled={refreshLoading || dataLoading && !searchLoading}
+                                    type={'primary'} className="button-search" onClick={this.onSearch}>
                                 搜索
                             </Button>
-                            <Button loading={refreshLoading} disabled={searchLoading} className="button-refresh" onClick={this.onFilter}>
+                            <Button loading={refreshLoading} disabled={searchLoading || dataLoading && !refreshLoading}
+                                    className="button-refresh" onClick={this.onRefresh}>
                                 刷新
                             </Button>
                             <Button className="button-export" loading={exportLoading} onClick={this.onExport}>
@@ -832,13 +877,13 @@ class Index extends React.PureComponent<{}, IIndexState> {
                                     </label>
                                 )
                             }
-                            <Button loading={patBtnLoading} type={patting ? 'default' : 'primary'}
+                            <Button disabled={selectedRowKeys.length===0} loading={patBtnLoading} type={patting ? 'default' : 'primary'}
                                     className={patting ? 'button-outline' : 'button-search'} onClick={this.patAction}>
                                 {patting ? '停止拍单' : '一键拍单'}
                             </Button>
-                            <Button className="button-export">
+                         {/*   <Button className="button-export">
                                 一键支付
-                            </Button>
+                            </Button>*/}
                             {
                                 !patting && patLength && patAccess && (
                                     <label className="pat-result">
@@ -864,6 +909,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
                             />
                         </div>
                         <Table
+                            rowKey="order_goods_sn"
                             className="data-grid"
                             bordered={true}
                             rowSelection={rowSelection}

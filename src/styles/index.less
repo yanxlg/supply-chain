@@ -171,6 +171,7 @@
         font-family:PingFangSC-Regular,PingFang SC;
         font-weight:400;
         color:rgba(24,144,255,1);
+        padding: 0;
         span{
             text-decoration: underline;
         }
@@ -194,7 +195,7 @@
     margin-top: 8px;
     transition: none;
     &-edit{
-        width:120px;
+        width:140px;
         resize: none;
     }
 }
@@ -275,6 +276,15 @@
                 color:rgba(0,0,0,0.85);
             }
         }
+    }
+    &-edit{
+        &-wrap{
+            position: relative;
+        }
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-left: 10px;
     }
 }
 
