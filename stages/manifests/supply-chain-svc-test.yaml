@@ -119,7 +119,7 @@ spec:
                 path: nginx.conf
         - name: frontend-supply-chain-page-conf
           configMap:
-            name: frontend-supply-chain-page-conf
+            name: frontend-supply-chain-page-nginx-conf
             items:
               - key: frontend-supply-chain-page.conf
                 path: frontend-supply-chain-page.conf
