@@ -1,3 +1,8 @@
+/**
+ * Routes:
+ *   - ./src/routes/PrivateRoute.tsx
+ */
+
 import React from 'react';
 import moment from 'moment';
 import { Button, Card, Input, DatePicker, Select, Pagination, Divider, Table } from 'antd';
