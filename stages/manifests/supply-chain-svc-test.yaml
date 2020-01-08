@@ -137,22 +137,22 @@ spec:
                         - frontend-supply-chain-page
                 topologyKey: kubernetes.io/hostname
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-supply-chain-page-svc
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /version
-spec:
-  selector:
-    name: frontend-supply-chain-page
-  ports:
-    - name: entry
-      port: 80
-      targetPort: 80
-      protocol: TCP
-  type: NodePort
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: frontend-supply-chain-page-svc
+#  annotations:
+#    alb.ingress.kubernetes.io/healthcheck-path: /version
+#spec:
+#  selector:
+#    name: frontend-supply-chain-page
+#  ports:
+#    - name: entry
+#      port: 80
+#      targetPort: 80
+#      protocol: TCP
+#  type: NodePort
 
 ## 使用下面的配置alb controller会再创建一个alb
 #---
@@ -182,3 +182,30 @@ spec:
 #            backend:
 #              serviceName: frontend-supply-chain-page-svc
 #              servicePort: 80
+
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend-supply-chain-page-external-elb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:724258426085:certificate/72dafeb0-99e6-4b84-a43c-466641f76c63
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: sg-00f93e4d234a5ca8b
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+spec:
+  selector:
+    name: frontend-supply-chain-page
+  ports:
+    - name: svc-http
+      port: 80
+      targetPort: http-port
+      protocol: TCP
+    - name: svc-https
+      port: 443
+      targetPort: http-port
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+    - 180.167.146.154/32
+    - 140.206.96.158/32
