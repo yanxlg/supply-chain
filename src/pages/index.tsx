@@ -53,7 +53,9 @@ declare interface IIndexState {
     patLength?: number;
     patAccess?: number;
     pddAccount?: string;
-    storeAccount?: string;
+    merchantAccount?: string;
+    pddUrl?:string;
+    merchantUrl?:string;
 
     // form
     orderSns?: string;
@@ -100,7 +102,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
         this.state = {
             patting: false,
             pddAccount: '好挣钱',
-            storeAccount: '好挣钱的店铺',
+            merchantAccount: '好挣钱的店铺',
             pddOrderStatus: -1,
             pddPayStatus: -1,
             orderStatus: -1,
@@ -326,13 +328,17 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-        }).then(({ data: { list = [], total } }) => {
+        }).then(({ data: { list = [], total,accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
             this.setState({
                 dataSet: list,
                 total: total,
                 pageNumber: page,
                 pageSize: nextPageSize,
-                selectedRowKeys:[]
+                selectedRowKeys:[],
+                pddAccount,
+                merchantAccount,
+                pddUrl,
+                merchantUrl
             });
         }).finally(() => {
             this.setState({
@@ -703,7 +709,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
     };
 
     render() {
-        const { exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, storeAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '100px',
@@ -727,16 +733,18 @@ class Index extends React.PureComponent<{}, IIndexState> {
                             <span className="value-1">
                                 {pddAccount}
                             </span>
-                            <Button className="button-1">进入个人中心</Button>
+                            <Button className="button-1"
+                                    href={pddUrl}
+                                    target="_blank">进入个人中心</Button>
                             {/*<Button className="button-1 button-2" type={'primary'}>同步拍单信息</Button>*/}
                         </div>
                         <div className="card-item">
                             <label className="label-1">商家账号：</label>
                             <span className="value-1">
-                                {storeAccount}
+                                {merchantAccount}
                             </span>
                             <Button className="button-1"
-                                    href="https://merchant.vova.com.hk/index.php?q=admin/main/systemNotification/index"
+                                    href={merchantUrl}
                                     target="_blank">进入商家后台</Button>
                         </div>
                     </Card>
