@@ -192,7 +192,7 @@ metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:724258426085:certificate/72dafeb0-99e6-4b84-a43c-466641f76c63
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-    service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: sg-07e97b8d953c0c6d3
+    service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: sg-00f93e4d234a5ca8b
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
 spec:
   selector:
