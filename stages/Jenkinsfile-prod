@@ -47,7 +47,7 @@ pipeline {
                                branches: [[name: "$refspec"]],
                                userRemoteConfigs: [[url: 'ssh://git@git.gitvv.com:38022/frontend/supply-chain.git', credentialsId: 'b86f9919-deee-4bdf-94fc-c81fa69186c2',]]])
                     if (NpmInstall == "true") {
-                        sh "docker run -u 0 --rm -v \$(pwd):/opt/app-root/src --name supply-chain-build node:10 bash -c 'cd /opt/app-root/supply-chain;npm install'"
+                        sh "docker run -u 0 --rm -v \$(pwd):/opt/app-root/supply-chain --name supply-chain-build node:10 bash -c 'cd /opt/app-root/supply-chain;npm install'"
                     }
                     sh "docker run --rm -v \$(pwd):/opt/app-root/supply-chain --name supply-chain-build node:10 bash -c 'cd /opt/app-root/supply-chain;npm run build'; \
                         sudo chown -R ec2-user.ec2-user \$(pwd); \
