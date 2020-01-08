@@ -97,7 +97,7 @@ const request = extend({
     credentials: 'include', // 默认请求是否带上cookie
 });
 
-request.interceptors.response.use(async (response,options) => {
+request.interceptors.response.use(async (response: Response, options: RequestOptionsInit) => {
     if(!options.responseType||options.responseType==="json"){
         try {
             const data = await response.clone().json();
