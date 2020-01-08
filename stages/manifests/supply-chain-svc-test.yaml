@@ -38,6 +38,7 @@ data:
         listen [::]:80 default_server;
         access_log  /var/log/nginx/access.log  apache_format;
         set $prjroot /usr/share/nginx/html;
+        root $prjroot/;
         index index.html;
         location ~ /version {
             root $prjroot/;
