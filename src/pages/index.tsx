@@ -489,7 +489,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             {
                 title: '订单时间',
                 width: '126px',
-                dataIndex: 'pdd_order_time',
+                dataIndex: 'confirm_time',
                 align: 'center',
             },
             {
