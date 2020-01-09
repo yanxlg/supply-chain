@@ -75,12 +75,14 @@ export async function exportOrderList(params: IBaseFilterProps) {
     }).then((response)=>{
         const disposition = response.headers.get('content-disposition');
         const fileName = decodeURI(disposition.substring(disposition.indexOf('filename=')+9, disposition.length));
-        const url = window.URL.createObjectURL(new Blob(response.data));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        response.blob().then((blob:Blob)=>{
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        })
     });
 }
