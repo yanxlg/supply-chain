@@ -14,7 +14,7 @@ import {
     cancelOrder,
     modifyMark,
     manualCreatePurchaseOrder,
-    exportOrderList,
+    exportOrderList, getOrderList,
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../styles/index.less';
@@ -47,6 +47,15 @@ declare interface IDataItem {
     _purchase_order_remark?: string;
 }
 
+
+declare interface IStatusMap{
+    [key:string]:string;
+}
+
+declare interface IStatesItem{
+    key:string;
+    value:string;
+}
 
 declare interface IIndexState {
     patting: boolean;
@@ -85,6 +94,17 @@ declare interface IIndexState {
     updateTrackingNumberLoading: boolean;
     patBtnLoading: boolean;// 拍单按钮loading
     selectedRowKeys: number[];
+
+
+
+    orderStatusList:IStatesItem[];
+    orderStatusMap:IStatusMap;
+    pddOrderStatusList:IStatesItem[];
+    pddOrderStatusMap:IStatusMap;
+    pddPayStatusList:IStatesItem[];
+    pddPayStatusMap:IStatusMap;
+    pddShippingStatusList:IStatesItem[];
+    pddShippingStatusMap:IStatusMap;
 }
 
 @BindAll()
@@ -101,8 +121,8 @@ class Index extends React.PureComponent<{}, IIndexState> {
         super(props);
         this.state = {
             patting: false,
-            pddAccount: '好挣钱',
-            merchantAccount: '好挣钱的店铺',
+            pddAccount: '',
+            merchantAccount: '',
             pddOrderStatus: -1,
             pddPayStatus: -1,
             orderStatus: -1,
@@ -118,6 +138,14 @@ class Index extends React.PureComponent<{}, IIndexState> {
             updateTrackingNumberLoading: false,
             dataSet: [],
             selectedRowKeys: [],
+            orderStatusList:[],
+            pddOrderStatusList:[],
+            pddPayStatusList:[],
+            pddShippingStatusList:[],
+            orderStatusMap:{},
+            pddOrderStatusMap:{},
+            pddPayStatusMap:{},
+            pddShippingStatusMap:{}
         };
     }
 
@@ -272,16 +300,81 @@ class Index extends React.PureComponent<{}, IIndexState> {
         });
     }
 
+    private objToArr(obj:IStatusMap){
+        let arr:IStatesItem[]=[];
+        for (let key in obj){
+            if(obj.hasOwnProperty(key)){
+                arr.push({
+                    key:String(key),
+                    value:obj[key]
+                })
+            }
+        }
+        return arr.sort((prev:IStatesItem,next:IStatesItem)=>Number(prev.key)<Number(next.key)?-1:1);
+    }
+
     private onSearch() {
         this.setState({
             searchLoading: true,
+            dataLoading:true
         });
-        this.onFilter({
+        const {
+            pageSize,
+            pddShippingStatus,
+            pddPayStatus,
+            pddOrderStatus,
+            orderStatus,
+            pddOrderEndTime,
+            pddOrderStartTime,
+            orderEndTime,
+            orderStartTime,
+            pddSkuIds,
+            orderSns,
+            pddOrderSns,
+            pddShippingNumbers,
+        } = this.state;
+        return getOrderList({
             page: 1,
-            refreshLoading: false,
+            size: pageSize,
+            pddShippingStatus,
+            pddPayStatus,
+            pddOrderStatus,
+            orderStatus,
+            pddOrderEndTime,
+            pddOrderStartTime,
+            orderEndTime,
+            orderStartTime,
+            pddSkuIds,
+            orderSns,
+            pddOrderSns,
+            pddShippingNumbers,
+        }).then(({ data: { list = [], total,orderStatusList={},pddOrderStatusList={},pddPayStatusList={},pddShippingStatusList={},accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
+            const orderStatusArr=this.objToArr(orderStatusList);
+            const pddOrderStatusArr=this.objToArr(pddOrderStatusList);
+            const pddPayStatusArr=this.objToArr(pddPayStatusList);
+            const pddShippingStatusArr=this.objToArr(pddShippingStatusList);
+            this.setState({
+                dataSet: list,
+                total: total,
+                pageNumber: 1,
+                selectedRowKeys:[],
+                pddAccount,
+                merchantAccount,
+                pddUrl,
+                merchantUrl,
+                orderStatusList:orderStatusArr,
+                pddOrderStatusList:pddOrderStatusArr,
+                pddPayStatusList:pddPayStatusArr,
+                pddShippingStatusList:pddShippingStatusArr,
+                orderStatusMap:orderStatusList,
+                pddOrderStatusMap:pddOrderStatusList,
+                pddPayStatusMap:pddPayStatusList,
+                pddShippingStatusMap:pddShippingStatusList
+            });
         }).finally(() => {
             this.setState({
-                searchLoading: false,
+                dataLoading: false,
+                searchLoading:false
             });
         });
     }
@@ -372,16 +465,11 @@ class Index extends React.PureComponent<{}, IIndexState> {
             });
         } else {
             // 一键拍单
-            const { selectedRowKeys = [], dataSet = [] } = this.state;
-            const salesOrderGoodsSns = dataSet.filter((_, index) => selectedRowKeys.indexOf(index) > -1).map((_) => _.order_goods_sn).join(',');
+            const { selectedRowKeys = [] } = this.state;
             manualCreatePurchaseOrder({
-                salesOrderGoodsSns: salesOrderGoodsSns,
+                salesOrderGoodsSns: selectedRowKeys.join(","),
             }).then(() => {
-      /*          this.setState({
-                    patting: true,
-                    patLength: 100,
-                    patAccess: 10,
-                });*/
+                this.onFilter();
             }).finally(() => {
                 this.setState({
                     patBtnLoading: false,
@@ -560,7 +648,8 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
                 render: (text: string) =>{
                     const status = String(text);
-                    return  status === '1' ? '已确认' : status === '2' ? '已取消' : ''
+                    const {orderStatusMap} = this.state;
+                    return  orderStatusMap[status]|| '';
                 },
             },
             {
@@ -570,7 +659,8 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    return status === '0' ? '未拍单' : status === '2' ? '已取消' : status === '4' ? '拍单失败' : status === '1' ? '已拍单' : ''
+                    const {pddOrderStatusMap} = this.state;
+                    return pddOrderStatusMap[status]||'';
                 },
             },
             {
@@ -580,7 +670,8 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    return status === '0' ? '未支付' : status === '2' ? '已支付' : status === '31' ? '审核不通过完结' : status === '30' ? '待审核' : status === '3' ? '待退款' : status === '4' ? '已退款' : '';
+                    const {pddPayStatusMap} = this.state;
+                    return pddPayStatusMap[status]||'';
                 }
             },
             {
@@ -590,7 +681,8 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    return status === '0' ? '未发货' : status === '1' ? '已发货' : status === '2' ? '已签收' : '';
+                    const {pddShippingStatusMap} = this.state;
+                    return pddShippingStatusMap[status]||'';
                 }
             },
             {
@@ -635,7 +727,13 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 },
             },
             {
-                title: '采购时间',
+                title: '采购下单时间',
+                dataIndex: 'pdd_order_time',
+                width: '126px',
+                align: 'center',
+            },
+            {
+                title: '采购支付时间',
                 dataIndex: 'purchase_pay_time',
                 width: '126px',
                 align: 'center',
@@ -709,7 +807,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
     };
 
     render() {
-        const { merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const {orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList, merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '100px',
@@ -782,43 +880,28 @@ class Index extends React.PureComponent<{}, IIndexState> {
                                 <label className="label-2">供应链订单状态：</label>
                                 <Select value={String(orderStatus)} placeholder="全部" className="select"
                                         onChange={this.onOrderStatus}>
-                                    <Select.Option value="-1">全部</Select.Option>
-                                    <Select.Option value="1">已确认</Select.Option>
-                                    <Select.Option value="2">已取消</Select.Option>
+                                    {orderStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
                                 </Select>
                             </div>
                             <div className="input-item">
                                 <label className="label-2">采购订单状态：</label>
                                 <Select value={String(pddOrderStatus)} placeholder="全部" className="select"
                                         onChange={this.onPddOrderStatus}>
-                                    <Select.Option value="-1">全部</Select.Option>
-                                    <Select.Option value="0">未拍单</Select.Option>
-                                    <Select.Option value="2">已取消</Select.Option>
-                                    <Select.Option value="4">拍单失败</Select.Option>
-                                    <Select.Option value="1">已拍单</Select.Option>
+                                    {pddOrderStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
                                 </Select>
                             </div>
                             <div className="input-item">
                                 <label className="label-2">采购支付状态：</label>
                                 <Select value={String(pddPayStatus)} placeholder="全部" className="select"
                                         onChange={this.onPddPayStatus}>
-                                    <Select.Option value="-1">全部</Select.Option>
-                                    <Select.Option value="0">未支付</Select.Option>
-                                    <Select.Option value="2">已支付</Select.Option>
-                                    <Select.Option value="31">审核不通过完结</Select.Option>
-                                    <Select.Option value="30">待审核</Select.Option>
-                                    <Select.Option value="3">待退款</Select.Option>
-                                    <Select.Option value="4">已退款</Select.Option>
+                                    {pddPayStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
                                 </Select>
                             </div>
                             <div className="input-item">
                                 <label className="label-2">采购配送状态：</label>
                                 <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
                                         onChange={this.onPddShippingStatus}>
-                                    <Select.Option value="-1">全部</Select.Option>
-                                    <Select.Option value="0">未发货</Select.Option>
-                                    <Select.Option value="1">已发货</Select.Option>
-                                    <Select.Option value="2">已签收</Select.Option>
+                                    {pddShippingStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
                                 </Select>
                             </div>
                         </div>
@@ -846,7 +929,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
                                 />
                             </div>
                             <div className="input-item">
-                                <label className="label-2">采购时间：</label>
+                                <label className="label-2">采购支付时间：</label>
                                 <DatePicker
                                     format="YYYY-MM-DD"
                                     disabledDate={this.disabledPddStartDate}
