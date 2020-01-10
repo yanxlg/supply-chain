@@ -77,7 +77,7 @@ pipeline {
                                userRemoteConfigs: [[url: 'ssh://git@git.gitvv.com:38022/frontend/supply-chain.git', credentialsId: 'b86f9919-deee-4bdf-94fc-c81fa69186c2',]]])
                     sh """export KUBECONFIG=~/.kube/config--vv-eks-service-backend-1; \
                           kubectl apply -f stages/manifests/supply-chain-svc-prod.yaml; \
-                          kubectl get pod -n default | grep -E '^frontend-supply-chain-page\$' | awk '{print \$1}' \
+                          kubectl get pod -n default | grep -E '^frontend-supply-chain-page-[0-9]+' | awk '{print \$1}' \
                               | while read podName; do kubectl get pod \$podName -n default -o yaml \
                               | kubectl replace --force -f -; done; \
                     """
