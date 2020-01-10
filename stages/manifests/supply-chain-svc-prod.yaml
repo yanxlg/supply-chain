@@ -51,7 +51,7 @@ data:
         location /api/{
             add_header Access-Control-Allow-Origin *;
             rewrite ^/api(.*)$ /$1 break;
-            proxy_pass https://pos-t.vova.com.hk/;
+            proxy_pass https://pos.vova.com.hk/;
         }
     }
 
