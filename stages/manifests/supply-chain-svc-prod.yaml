@@ -143,7 +143,7 @@ apiVersion: v1
 metadata:
   name: frontend-supply-chain-page-external-elb
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: 	arn:aws:acm:us-east-1:832373879023:certificate/3f84bac5-ca0d-48a0-8da2-f4b9f7d1d03f
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:832373879023:certificate/3f84bac5-ca0d-48a0-8da2-f4b9f7d1d03f
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
     service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: sg-1980996e
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
