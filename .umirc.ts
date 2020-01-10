@@ -4,6 +4,7 @@ const shajs = require('sha.js');
 // ref: https://umijs.org/config/
 const config: IConfig = {
     treeShaking: true,
+    hash:true,
     cssLoaderOptions: {
         modules: false, // false 不起作用
         getLocalIdent: (
