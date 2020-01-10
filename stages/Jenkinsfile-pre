@@ -54,11 +54,11 @@ pipeline {
                         git rev-parse --short HEAD > dist/version; \
                     "
                     sh "${docker_login}"
-                    sh "docker build --no-cache --network=host -f Dockerfile -t 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page .; \
-                        docker push 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page; \
-                        docker tag 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain; \
+                    sh "docker build --no-cache --network=host -f Dockerfile -t 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page-pre .; \
+                        docker push 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page-pre; \
+                        docker tag 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page-pre 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain; \
                         docker push 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain; \
-                        docker rmi 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page; \
+                        docker rmi 832373879023.dkr.ecr.us-east-1.amazonaws.com/supply-chain:page-pre; \
                        "
                 }
             }
@@ -76,8 +76,8 @@ pipeline {
                                branches: [[name: "$refspec"]],
                                userRemoteConfigs: [[url: 'ssh://git@git.gitvv.com:38022/frontend/supply-chain.git', credentialsId: 'b86f9919-deee-4bdf-94fc-c81fa69186c2',]]])
                     sh """export KUBECONFIG=~/.kube/config--vv-eks-service-backend-1; \
-                          kubectl apply -f stages/manifests/supply-chain-svc-prod.yaml; \
-                          kubectl get pod -n default | grep -E '^frontend-supply-chain-page\$' | awk '{print \$1}' \
+                          kubectl apply -f stages/manifests/supply-chain-svc-pre.yaml; \
+                          kubectl get pod -n default | grep 'frontend-supply-chain-page-pre' | awk '{print \$1}' \
                               | while read podName; do kubectl get pod \$podName -n default -o yaml \
                               | kubectl replace --force -f -; done; \
                     """
