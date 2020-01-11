@@ -593,7 +593,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
             },
             {
-                title: 'Goods id',
+                title: 'Virtual Goods id',
                 dataIndex: 'vova_goods_id',
                 width: '182px',
                 align: 'center',
@@ -741,6 +741,12 @@ class Index extends React.PureComponent<{}, IIndexState> {
             {
                 title: '采购订单号',
                 dataIndex: 'pdd_order_sn',
+                width: '245px',
+                align: 'center',
+            },
+            {
+                title: '采购父订单号',
+                dataIndex: 'pdd_parent_order_sn',
                 width: '245px',
                 align: 'center',
             },
