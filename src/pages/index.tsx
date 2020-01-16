@@ -605,6 +605,12 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 align: 'center',
             },
             {
+                title: 'pdd goods id',
+                dataIndex: 'pdd_goods_id',
+                width: '223px',
+                align: 'center',
+            },
+            {
                 title: '商品图片',
                 dataIndex: 'image_url',
                 width: '106px',
