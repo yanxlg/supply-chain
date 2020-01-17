@@ -5,7 +5,7 @@
 
 import React from 'react';
 import moment from 'moment';
-import { Button, Card, Input, DatePicker, Select, Pagination, Divider, Table } from 'antd';
+import { Button, Card, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip } from 'antd';
 import { BindAll } from 'lodash-decorators';
 import User from '@/storage/User';
 import {
@@ -79,6 +79,7 @@ declare interface IIndexState {
     orderEndTime?: string;
     pddOrderStartTime?: string;
     pddOrderEndTime?: string;
+    vovaGoodsId?:string;
 
 
     // 分页
@@ -174,6 +175,12 @@ class Index extends React.PureComponent<{}, IIndexState> {
     private onPddShippingNumbersInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
         this.setState({
             pddShippingNumbers: e.target.value,
+        });
+    }
+
+    private onVovaGoodsIdInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+        this.setState({
+            vovaGoodsId: e.target.value,
         });
     }
 
@@ -332,6 +339,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         } = this.state;
         return getOrderList({
             page: 1,
@@ -348,6 +356,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         }).then(({ data: { list = [], total,orderStatusList={},pddOrderStatusList={},pddPayStatusList={},pddShippingStatusList={},accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
             const orderStatusArr=this.objToArr(orderStatusList);
             const pddOrderStatusArr=this.objToArr(pddOrderStatusList);
@@ -400,6 +409,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         } = this.state;
         this.setState({
             dataLoading: true,
@@ -421,6 +431,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         }).then(({ data: { list = [], total,accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
             this.setState({
                 dataSet: list,
@@ -492,6 +503,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         } = this.state;
         this.setState({
             exportLoading: true,
@@ -509,6 +521,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
+            vovaGoodsId
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -615,7 +628,10 @@ class Index extends React.PureComponent<{}, IIndexState> {
                 dataIndex: 'image_url',
                 width: '106px',
                 align: 'center',
-                render: (img: string) => <img src={img} className="goods-image"/>,
+                render: (img: string) => img?
+                    <Tooltip placement="right" title={<img src={img.replace("150_150","240_240")} className="goods-image-preview"/>} overlayClassName="goods-image-tooltip">
+                        <img src={img} className="goods-image"/>
+                    </Tooltip>:null,
             },
             {
                 title: '商品信息',
@@ -819,7 +835,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
     };
 
     render() {
-        const {orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList, merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const {vovaGoodsId,orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList, merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '100px',
@@ -885,6 +901,13 @@ class Index extends React.PureComponent<{}, IIndexState> {
                                 采购运单号：
                             </label>
                             <Input.TextArea value={pddShippingNumbers} onChange={this.onPddShippingNumbersInput}
+                                            placeholder="一行一个" className="textarea"/>
+                        </div>
+                        <div className="textarea-wrap">
+                            <label className="label-2">
+                                Virtual Goods id：
+                            </label>
+                            <Input.TextArea value={vovaGoodsId} onChange={this.onVovaGoodsIdInput}
                                             placeholder="一行一个" className="textarea"/>
                         </div>
                         <div className="row">
