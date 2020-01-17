@@ -79,7 +79,7 @@ declare interface IIndexState {
     orderEndTime?: string;
     pddOrderStartTime?: string;
     pddOrderEndTime?: string;
-    vovaGoodsId?:string;
+    vovaGoodsIds?:string;
 
 
     // 分页
@@ -180,7 +180,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
 
     private onVovaGoodsIdInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
         this.setState({
-            vovaGoodsId: e.target.value,
+            vovaGoodsIds: e.target.value,
         });
     }
 
@@ -339,7 +339,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         } = this.state;
         return getOrderList({
             page: 1,
@@ -356,7 +356,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         }).then(({ data: { list = [], total,orderStatusList={},pddOrderStatusList={},pddPayStatusList={},pddShippingStatusList={},accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
             const orderStatusArr=this.objToArr(orderStatusList);
             const pddOrderStatusArr=this.objToArr(pddOrderStatusList);
@@ -409,7 +409,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         } = this.state;
         this.setState({
             dataLoading: true,
@@ -431,7 +431,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         }).then(({ data: { list = [], total,accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
             this.setState({
                 dataSet: list,
@@ -503,7 +503,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         } = this.state;
         this.setState({
             exportLoading: true,
@@ -521,7 +521,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
             orderSns,
             pddOrderSns,
             pddShippingNumbers,
-            vovaGoodsId
+            vovaGoodsIds
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -835,7 +835,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
     };
 
     render() {
-        const {vovaGoodsId,orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList, merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const {vovaGoodsIds,orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList, merchantUrl,pddUrl,exportLoading, searchLoading, refreshLoading, dataLoading, patting, patAccess, patLength, pddAccount, merchantAccount, pageNumber, pageSize, total, patBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '100px',
@@ -907,7 +907,7 @@ class Index extends React.PureComponent<{}, IIndexState> {
                             <label className="label-2">
                                 Virtual Goods id：
                             </label>
-                            <Input.TextArea value={vovaGoodsId} onChange={this.onVovaGoodsIdInput}
+                            <Input.TextArea value={vovaGoodsIds} onChange={this.onVovaGoodsIdInput}
                                             placeholder="一行一个" className="textarea"/>
                         </div>
                         <div className="row">
