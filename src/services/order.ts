@@ -14,6 +14,7 @@ declare interface IBaseFilterProps {
     pddOrderStartTime?: string;
     pddOrderEndTime?: string;
     pddShippingStatus?: number;
+    vovaGoodsIds?:string;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {
