@@ -15,6 +15,9 @@ declare interface IBaseFilterProps {
     pddOrderEndTime?: string;
     pddShippingStatus?: number;
     vovaGoodsIds?:string;
+    tabType?:0|1|2|3|4|5;
+    pddParentOrderSn?:string;
+    pddOrderCancelType?:number;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {
@@ -47,6 +50,13 @@ export async function cancelOrder(params: { salesOrderGoodsSn: string }) {
     return request.post(ApiPathEnum.CancelOrder, {
         requestType: 'form',
         data: params,
+    });
+}
+
+export async function cancelSaleOrder(salesOrderGoodsSn:string) {
+    return request.post(ApiPathEnum.CancelSaleOrder, {
+        requestType: 'form',
+        data: {salesOrderGoodsSn},
     });
 }
 
@@ -85,5 +95,13 @@ export async function exportOrderList(params: IBaseFilterProps) {
             link.click();
             link.remove();
         })
+    });
+}
+
+
+export async function confirmPay(pddParentOrderSn:string) {
+    return request.post(ApiPathEnum.ConfirmPay,{
+        requestType: 'form',
+        data:{pddParentOrderSn}
     });
 }
