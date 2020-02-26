@@ -14,6 +14,7 @@ import {
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
+import { ShippingModal } from './ShippingModal';
 
 
 declare interface IDataItem {
@@ -111,6 +112,12 @@ declare interface IIndexState {
     pddCancelReasonMap: IStatusMap;
 
     showMoreSearch: boolean;
+
+    trackModalId: {
+        pdd_order_sn?: string;
+        image_url?: string;
+        visible: boolean;
+    };
 }
 
 declare interface ITabChildProps {
@@ -164,6 +171,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddShippingStatusMap: {},
             pddCancelReasonMap: {},
             showMoreSearch: false,
+            trackModalId: {
+                visible: false,
+            },
         };
     }
 
@@ -666,7 +676,22 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     }
 
     private showShippingModal(record: IDataItem) {
+        this.setState({
+            trackModalId: {
+                pdd_order_sn: record.pdd_order_sn,
+                image_url: record.image_url,
+                visible: true,
+            },
+        });
+    }
 
+    private closeShippingModal() {
+        this.setState({
+            trackModalId: {
+                ...this.state.trackModalId,
+                visible: false,
+            },
+        });
     }
 
     private getColumns(): ColumnProps<IDataItem>[] {
@@ -1066,7 +1091,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
 
     render() {
         const { tabType } = this.props;
-        const { pddCancelReasonList, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { pddCancelReasonList, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1248,12 +1273,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                     </div>
 
                                     {
-                                        tabType === 0? (
+                                        tabType === 0 ? (
                                             <div className="textarea-wrap">
                                                 <label className="label-2">
                                                     采购父订单 ID：
                                                 </label>
-                                                <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput}
+                                                <Input.TextArea value={pddParentOrderSn}
+                                                                onChange={this.onpddParentOrderSnInput}
                                                                 placeholder="一行一个"
                                                                 className="textarea" rows={1}/>
                                             </div>
@@ -1523,6 +1549,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                         disabled={dataLoading}
                     />
                 </div>
+                <ShippingModal visible={trackModalId.visible} main_url={trackModalId?.image_url}
+                               pdd_order_sn={trackModalId?.pdd_order_sn} onClose={this.closeShippingModal}/>
             </div>
         );
     }

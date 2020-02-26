@@ -105,3 +105,13 @@ export async function confirmPay(pddParentOrderSn:string) {
         data:{pddParentOrderSn}
     });
 }
+
+
+export async function queryShippingDetail(pdd_order_sn:string) {
+    return request.get(ApiPathEnum.QueryTrack,{
+        requestType: 'form',
+        params:{
+            pdd_order_sn
+        }
+    })
+}
