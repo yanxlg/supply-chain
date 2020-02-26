@@ -49,7 +49,7 @@ data:
         }
 
         location /api/{
-            resolver 8.8.8.8;
+            resolver 8.8.8.8 [::1]:5353 valid=10s;
             add_header Access-Control-Allow-Origin *;
             rewrite ^/api(.*)$ /$1 break;
             proxy_pass https://pos.vova.com.hk/;
