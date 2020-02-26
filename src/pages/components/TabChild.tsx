@@ -3,7 +3,7 @@ import moment from 'moment';
 import { Button, Card, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, Checkbox, message } from 'antd';
 import { BindAll } from 'lodash-decorators';
 import User from '@/storage/User';
-import QRCode from "qrcode.react";
+import QRCode from 'qrcode.react';
 import {
     filterOrder,
     modifyOrderInfo,
@@ -14,7 +14,6 @@ import {
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
-
 
 
 declare interface IDataItem {
@@ -36,23 +35,23 @@ declare interface IDataItem {
     'pdd_order_time': string,
     'purchase_tracking_number': string,
     'style_values': string;
-    purchase_shipping_status:string;
-    pdd_parent_order_sn:string;
+    purchase_shipping_status: string;
+    pdd_parent_order_sn: string;
     purchase_order_remark: string;
 
     _purchase_tracking_number?: string;
     _purchase_order_remark?: string;
-    payStatus?:1|2|3;
+    payStatus?: 1 | 2 | 3;
 }
 
 
-declare interface IStatusMap{
-    [key:string]:string;
+declare interface IStatusMap {
+    [key: string]: string;
 }
 
-declare interface IStatesItem{
-    key:string;
-    value:string;
+declare interface IStatesItem {
+    key: string;
+    value: string;
 }
 
 declare interface IIndexState {
@@ -61,8 +60,8 @@ declare interface IIndexState {
     patAccess?: number;
     pddAccount?: string;
     merchantAccount?: string;
-    pddUrl?:string;
-    merchantUrl?:string;
+    pddUrl?: string;
+    merchantUrl?: string;
 
     // form
     orderSns?: string;
@@ -72,15 +71,14 @@ declare interface IIndexState {
     pddShippingNumbers?: string;
     pddOrderStatus: number;
     pddPayStatus: number;
-    pddOrderCancelType:number;
+    pddOrderCancelType: number;
     orderStatus: number;
     pddShippingStatus: number;
     orderStartTime?: string;
     orderEndTime?: string;
     pddOrderStartTime?: string;
     pddOrderEndTime?: string;
-    vovaGoodsIds?:string;
-
+    vovaGoodsIds?: string;
 
 
     // 分页
@@ -100,24 +98,25 @@ declare interface IIndexState {
     selectedRowKeys: string[];
 
 
+    orderStatusList: IStatesItem[];
+    orderStatusMap: IStatusMap;
+    pddOrderStatusList: IStatesItem[];
+    pddOrderStatusMap: IStatusMap;
+    pddPayStatusList: IStatesItem[];
+    pddPayStatusMap: IStatusMap;
+    pddShippingStatusList: IStatesItem[];
+    pddShippingStatusMap: IStatusMap;
 
-    orderStatusList:IStatesItem[];
-    orderStatusMap:IStatusMap;
-    pddOrderStatusList:IStatesItem[];
-    pddOrderStatusMap:IStatusMap;
-    pddPayStatusList:IStatesItem[];
-    pddPayStatusMap:IStatusMap;
-    pddShippingStatusList:IStatesItem[];
-    pddShippingStatusMap:IStatusMap;
+    pddCancelReasonList: IStatesItem[];
+    pddCancelReasonMap: IStatusMap;
 
-    pddCancelReasonList:IStatesItem[];
-    pddCancelReasonMap:IStatusMap;
-
-    showMoreSearch:boolean;
+    showMoreSearch: boolean;
 }
 
 declare interface ITabChildProps {
-    tabType:0|1|2|3|4;// 不同类型
+    tabType: 0 | 1 | 2 | 3 | 4;// 不同类型
+    setAllTotal: (allTotal: number) => void;
+    setPayTotal: (payTotal: number) => void;
 }
 
 @BindAll()
@@ -138,15 +137,15 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             merchantAccount: '',
             pddOrderStatus: -1,
             pddPayStatus: -1,
-            pddOrderCancelType:-1,
+            pddOrderCancelType: -1,
             orderStatus: -1,
             pddShippingStatus: -1,
             pageNumber: 1,
             pageSize: 100,
             total: 0,
             patBtnLoading: false,
-            cancelPatBtnLoading:false,
-            cancelSaleBtnLoading:false,
+            cancelPatBtnLoading: false,
+            cancelSaleBtnLoading: false,
             dataLoading: false,
             searchLoading: false,
             refreshLoading: false,
@@ -154,17 +153,17 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             updateTrackingNumberLoading: false,
             dataSet: [],
             selectedRowKeys: [],
-            orderStatusList:[],
-            pddOrderStatusList:[],
-            pddPayStatusList:[],
-            pddShippingStatusList:[],
-            pddCancelReasonList:[],
-            orderStatusMap:{},
-            pddOrderStatusMap:{},
-            pddPayStatusMap:{},
-            pddShippingStatusMap:{},
-            pddCancelReasonMap:{},
-            showMoreSearch:false
+            orderStatusList: [],
+            pddOrderStatusList: [],
+            pddPayStatusList: [],
+            pddShippingStatusList: [],
+            pddCancelReasonList: [],
+            orderStatusMap: {},
+            pddOrderStatusMap: {},
+            pddPayStatusMap: {},
+            pddShippingStatusMap: {},
+            pddCancelReasonMap: {},
+            showMoreSearch: false,
         };
     }
 
@@ -312,7 +311,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         });
     }
 
-    private onPddCancelReason(value: string){
+    private onPddCancelReason(value: string) {
         this.setState({
             pddOrderCancelType: Number(value),
         });
@@ -337,23 +336,23 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         });
     }
 
-    private objToArr(obj:IStatusMap){
-        let arr:IStatesItem[]=[];
-        for (let key in obj){
-            if(obj.hasOwnProperty(key)){
+    private objToArr(obj: IStatusMap) {
+        let arr: IStatesItem[] = [];
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
                 arr.push({
-                    key:String(key),
-                    value:obj[key]
-                })
+                    key: String(key),
+                    value: obj[key],
+                });
             }
         }
-        return arr.sort((prev:IStatesItem,next:IStatesItem)=>Number(prev.key)<Number(next.key)?-1:1);
+        return arr.sort((prev: IStatesItem, next: IStatesItem) => Number(prev.key) < Number(next.key) ? -1 : 1);
     }
 
     private onSearch() {
         this.setState({
             searchLoading: true,
-            dataLoading:true
+            dataLoading: true,
         });
         const {
             pageSize,
@@ -371,9 +370,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddShippingNumbers,
             vovaGoodsIds,
             pddParentOrderSn,
-            pddOrderCancelType
+            pddOrderCancelType,
         } = this.state;
-        const {tabType} = this.props;
+        const { tabType } = this.props;
         return getOrderList({
             page: 1,
             size: pageSize,
@@ -392,46 +391,48 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             vovaGoodsIds,
             pddParentOrderSn,
             tabType,
-            pddOrderCancelType
-        }).then(({ data: { list = [], total,orderStatusList={},pddOrderStatusList={},pddPayStatusList={},pddShippingStatusList={},pddOrderCancelTypeList:pddCancelReasonList={},accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
-            const orderStatusArr=this.objToArr(orderStatusList);
-            const pddOrderStatusArr=this.objToArr(pddOrderStatusList);
-            const pddPayStatusArr=this.objToArr(pddPayStatusList);
-            const pddShippingStatusArr=this.objToArr(pddShippingStatusList);
+            pddOrderCancelType,
+        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, orderStatusList = {}, pddOrderStatusList = {}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
+            const orderStatusArr = this.objToArr(orderStatusList);
+            const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
+            const pddPayStatusArr = this.objToArr(pddPayStatusList);
+            const pddShippingStatusArr = this.objToArr(pddShippingStatusList);
             const pddCancelReasonArr = this.objToArr(pddCancelReasonList);
             this.setState({
                 dataSet: list,
                 total: total,
                 pageNumber: 1,
-                selectedRowKeys:[],
+                selectedRowKeys: [],
                 pddAccount,
                 merchantAccount,
                 pddUrl,
                 merchantUrl,
-                orderStatusList:orderStatusArr,
-                pddOrderStatusList:pddOrderStatusArr,
-                pddPayStatusList:pddPayStatusArr,
-                pddShippingStatusList:pddShippingStatusArr,
-                pddCancelReasonList:pddCancelReasonArr,
-                orderStatusMap:orderStatusList,
-                pddOrderStatusMap:pddOrderStatusList,
-                pddPayStatusMap:pddPayStatusList,
-                pddCancelReasonMap:pddCancelReasonList,
-                pddShippingStatusMap:pddShippingStatusList
+                orderStatusList: orderStatusArr,
+                pddOrderStatusList: pddOrderStatusArr,
+                pddPayStatusList: pddPayStatusArr,
+                pddShippingStatusList: pddShippingStatusArr,
+                pddCancelReasonList: pddCancelReasonArr,
+                orderStatusMap: orderStatusList,
+                pddOrderStatusMap: pddOrderStatusList,
+                pddPayStatusMap: pddPayStatusList,
+                pddCancelReasonMap: pddCancelReasonList,
+                pddShippingStatusMap: pddShippingStatusList,
             });
+            this.props.setAllTotal(allTotal);
+            this.props.setPayTotal(payTotal);
         }).finally(() => {
             this.setState({
                 dataLoading: false,
-                searchLoading:false
+                searchLoading: false,
             });
         });
     }
 
 
-    private toggleMoreForm(){
+    private toggleMoreForm() {
         this.setState({
-            showMoreSearch:!this.state.showMoreSearch
-        })
+            showMoreSearch: !this.state.showMoreSearch,
+        });
     }
 
     private onFilter({ page, refreshLoading = true, size }: { page: number; refreshLoading?: boolean; size?: number } = {
@@ -453,9 +454,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddShippingNumbers,
             vovaGoodsIds,
             pddParentOrderSn,
-            pddOrderCancelType
+            pddOrderCancelType,
         } = this.state;
-        const {tabType} = this.props;
+        const { tabType } = this.props;
         this.setState({
             dataLoading: true,
             refreshLoading: refreshLoading,
@@ -479,19 +480,21 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             vovaGoodsIds,
             pddParentOrderSn,
             tabType,
-            pddOrderCancelType
-        }).then(({ data: { list = [], total,accountInfo:{pddAccount="",merchantAccount="",pddUrl="",merchantUrl=""}={} } }) => {
+            pddOrderCancelType,
+        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             this.setState({
                 dataSet: list,
                 total: total,
                 pageNumber: page,
                 pageSize: nextPageSize,
-                selectedRowKeys:[],
+                selectedRowKeys: [],
                 pddAccount,
                 merchantAccount,
                 pddUrl,
-                merchantUrl
+                merchantUrl,
             });
+            this.props.setAllTotal(allTotal);
+            this.props.setPayTotal(payTotal);
         }).finally(() => {
             this.setState({
                 dataLoading: false,
@@ -501,34 +504,34 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     }
 
 
-    private onCancelPadOrder(){
-        const {selectedRowKeys} = this.state;
+    private onCancelPadOrder() {
+        const { selectedRowKeys } = this.state;
         this.setState({
-            cancelPatBtnLoading:true,
+            cancelPatBtnLoading: true,
         });
         cancelOrder({
-            salesOrderGoodsSn: selectedRowKeys.join(","),
-        }).then(({message:msg}) => {
+            salesOrderGoodsSn: selectedRowKeys.join(','),
+        }).then(({ message: msg }) => {
             message.success(msg);
             this.onFilter();
-        }).finally(()=>{
+        }).finally(() => {
             this.setState({
-                cancelPatBtnLoading:false,
+                cancelPatBtnLoading: false,
             });
         });
     }
 
-    private onCancelSaleOrder(){
-        const {selectedRowKeys} = this.state;
+    private onCancelSaleOrder() {
+        const { selectedRowKeys } = this.state;
         this.setState({
-            cancelSaleBtnLoading:true,
+            cancelSaleBtnLoading: true,
         });
-        cancelSaleOrder(selectedRowKeys.join(",")).then(({message:msg}) => {
+        cancelSaleOrder(selectedRowKeys.join(',')).then(({ message: msg }) => {
             message.success(msg);
             this.onFilter();
-        }).finally(()=>{
+        }).finally(() => {
             this.setState({
-                cancelSaleBtnLoading:false,
+                cancelSaleBtnLoading: false,
             });
         });
     }
@@ -559,7 +562,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             // 一键拍单
             const { selectedRowKeys = [] } = this.state;
             manualCreatePurchaseOrder({
-                salesOrderGoodsSns: selectedRowKeys.join(","),
+                salesOrderGoodsSns: selectedRowKeys.join(','),
             }).then(() => {
                 this.onFilter();
             }).finally(() => {
@@ -586,12 +589,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddShippingNumbers,
             vovaGoodsIds,
             pddParentOrderSn,
-            pddOrderCancelType
+            pddOrderCancelType,
         } = this.state;
         this.setState({
             exportLoading: true,
         });
-        const {tabType} = this.props;
+        const { tabType } = this.props;
         exportOrderList({
             pddShippingStatus,
             pddPayStatus,
@@ -608,7 +611,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             vovaGoodsIds,
             pddParentOrderSn,
             tabType,
-            pddOrderCancelType
+            pddOrderCancelType,
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -638,7 +641,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
 
     private modifyMark(record: IDataItem) {
         this.setState({
-            dataLoading:true
+            dataLoading: true,
         });
         modifyMark({
             salesOrderGoodsSn: record.order_goods_sn,
@@ -646,13 +649,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         }).then(() => {
             // 修改成功后刷新当前页面
             this.onFilter();
-        }).catch(()=>{
+        }).catch(() => {
             this.setState({
-                dataLoading:false
+                dataLoading: false,
             });
         });
     }
-
 
 
     private manualCreatePurchaseOrder(id: string) {
@@ -661,6 +663,10 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         }).then(() => {
             this.onFilter();
         });
+    }
+
+    private showShippingModal(record: IDataItem) {
+
     }
 
     private getColumns(): ColumnProps<IDataItem>[] {
@@ -709,10 +715,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'image_url',
                 width: '106px',
                 align: 'center',
-                render: (img: string) => img?
-                    <Tooltip placement="right" title={<img src={img.replace("150_150","240_240")} className="goods-image-preview"/>} overlayClassName="goods-image-tooltip">
+                render: (img: string) => img ?
+                    <Tooltip placement="right"
+                             title={<img src={img.replace('150_150', '240_240')} className="goods-image-preview"/>}
+                             overlayClassName="goods-image-tooltip">
                         <img src={img} className="goods-image"/>
-                    </Tooltip>:null,
+                    </Tooltip> : null,
             },
             {
                 title: '商品信息',
@@ -745,7 +753,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
             },
             {
-                title:"vv二级分类",
+                title: 'vv二级分类',
                 dataIndex: 'vova_cat_id',
                 width: '105px',
                 align: 'center',
@@ -761,10 +769,10 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'sales_order_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) =>{
+                render: (text: string) => {
                     const status = String(text);
-                    const {orderStatusMap} = this.state;
-                    return  orderStatusMap[status]|| '';
+                    const { orderStatusMap } = this.state;
+                    return orderStatusMap[status] || '';
                 },
             },
             {
@@ -774,8 +782,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    const {pddOrderStatusMap} = this.state;
-                    return pddOrderStatusMap[status]||'';
+                    const { pddOrderStatusMap } = this.state;
+                    return pddOrderStatusMap[status] || '';
                 },
             },
             {
@@ -785,25 +793,36 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    const {pddPayStatusMap} = this.state;
-                    return pddPayStatusMap[status]||'';
-                }
+                    const { pddPayStatusMap } = this.state;
+                    return pddPayStatusMap[status] || '';
+                },
             },
             {
                 title: '采购配送状态',
                 dataIndex: 'purchase_shipping_status',
                 width: '218px',
                 align: 'center',
-                render: (text: string) => {
+                render: (text: string, record: IDataItem) => {
                     const status = String(text);
-                    const {pddShippingStatusMap} = this.state;
-                    return pddShippingStatusMap[status]||'';
-                }
-            },{
+                    const { pddShippingStatusMap } = this.state;
+                    return (
+                        <>
+                            {pddShippingStatusMap[status] || ''}
+                            {text === '1' ?
+                                <div><Button onClick={() => this.showShippingModal(record)}>物流轨迹</Button></div> : null}
+                        </>
+                    );
+                },
+            }, {
                 title: '采购取消原因',
                 dataIndex: 'cancel_type',
                 width: '140px',
                 align: 'center',
+                render: (text: string) => {
+                    const status = String(text);
+                    const { pddCancelReasonMap } = this.state;
+                    return pddCancelReasonMap[status] || '';
+                },
             },
             {
                 title: '采购下单时间',
@@ -878,7 +897,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                 className="textarea-edit"/>
                             {
                                 record._purchase_order_remark &&
-                                <Button type="link" className="button-link data-grid-edit" onClick={() => this.modifyMark(record)}>保存</Button>
+                                <Button type="link" className="button-link data-grid-edit"
+                                        onClick={() => this.modifyMark(record)}>保存</Button>
                             }
                         </div>
                     );
@@ -887,18 +907,18 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         ];
     }
 
-    private confirmPay(record:IDataItem){
+    private confirmPay(record: IDataItem) {
         record.payStatus = 1;// 支付中
         this.forceUpdate();
-        confirmPay(record.pdd_parent_order_sn).then(()=>{
+        confirmPay(record.pdd_parent_order_sn).then(() => {
             this.onFilter();
-        }).catch(()=>{
+        }).catch(() => {
             record.payStatus = 3;// 支付成功
             this.forceUpdate();
-        })
+        });
     }
 
-    private getPayColumns(): ColumnProps<IDataItem>[]{
+    private getPayColumns(): ColumnProps<IDataItem>[] {
         const { pageSize, pageNumber } = this.state;
         return [
             {
@@ -925,43 +945,47 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 title: '支付二维码',
                 dataIndex: 'pay_url',
                 align: 'center',
-                width: "250px",
-                render:(text:string,record:IDataItem)=>{
+                width: '250px',
+                render: (text: string, record: IDataItem) => {
                     const payedStatus = record.purchase_pay_status;
-                    if(payedStatus === '2'){
-                        return "已支付";
+                    if (payedStatus === '2') {
+                        return '已支付';
                     }
-                    if(payedStatus === '0'){
-                        const {payStatus} = record;
-                        if(payStatus===1){
-                            return "支付确认中，请稍后…";
+                    if (payedStatus === '0') {
+                        const { payStatus } = record;
+                        if (payStatus === 1) {
+                            return '支付确认中，请稍后…';
                         }
-                        if(payStatus === 2){
-                            return "已支付";
+                        if (payStatus === 2) {
+                            return '已支付';
                         }
-                        if(payStatus === 3){
+                        if (payStatus === 3) {
                             return (
                                 <>
                                     <div>
                                         未支付成功，请重新支付
                                     </div>
-                                    <Tooltip placement="right" title={<QRCode value={text} size={300} className="goods-image-preview"/>} overlayClassName="goods-image-tooltip">
+                                    <Tooltip placement="right"
+                                             title={<QRCode value={text} size={300} className="goods-image-preview"/>}
+                                             overlayClassName="goods-image-tooltip">
                                         <QRCode value={text} size={40} className="qr-image"/>
                                     </Tooltip>
-                                    <Button onClick={()=>this.confirmPay(record)}>确认支付</Button>
+                                    <Button onClick={() => this.confirmPay(record)}>确认支付</Button>
                                 </>
-                            )
+                            );
                         }
                         return (
                             <>
-                                <Tooltip placement="right" title={<QRCode value={text} size={300} className="goods-image-preview"/>} overlayClassName="goods-image-tooltip">
+                                <Tooltip placement="right"
+                                         title={<QRCode value={text} size={300} className="goods-image-preview"/>}
+                                         overlayClassName="goods-image-tooltip">
                                     <QRCode value={text} size={40} className="qr-image"/>
                                 </Tooltip>
-                                <Button onClick={()=>this.confirmPay(record)}>确认支付</Button>
+                                <Button onClick={() => this.confirmPay(record)}>确认支付</Button>
                             </>
-                        )
+                        );
                     }
-                }
+                },
             },
             {
                 title: '采购子订单ID',
@@ -982,9 +1006,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    const {pddPayStatusMap} = this.state;
-                    return pddPayStatusMap[status]||'';
-                }
+                    const { pddPayStatusMap } = this.state;
+                    return pddPayStatusMap[status] || '';
+                },
             },
             {
                 title: '采购订单状态',
@@ -993,8 +1017,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
                 render: (text: string) => {
                     const status = String(text);
-                    const {pddOrderStatusMap} = this.state;
-                    return pddOrderStatusMap[status]||'';
+                    const { pddOrderStatusMap } = this.state;
+                    return pddOrderStatusMap[status] || '';
                 },
             },
             {
@@ -1026,7 +1050,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                 className="textarea-edit"/>
                             {
                                 record._purchase_order_remark &&
-                                <Button type="link" className="button-link data-grid-edit" onClick={() => this.modifyMark(record)}>保存</Button>
+                                <Button type="link" className="button-link data-grid-edit"
+                                        onClick={() => this.modifyMark(record)}>保存</Button>
                             }
                         </div>
                     );
@@ -1040,8 +1065,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     };
 
     render() {
-        const {tabType} = this.props;
-        const {pddCancelReasonList,pddOrderCancelType,pddParentOrderSn,showMoreSearch,vovaGoodsIds,orderStatusList,pddOrderStatusList,pddPayStatusList,pddShippingStatusList,exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { tabType } = this.props;
+        const { pddCancelReasonList, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1052,7 +1077,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         return (
             <div>
                 {
-                    tabType!==2?(
+                    tabType !== 2 ? (
                         <div className="textarea-wrap">
                             <label className="label-2">
                                 销售订单 ID：
@@ -1060,10 +1085,10 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                             <Input.TextArea value={orderSns} onChange={this.onOrderSnsInput} placeholder="一行一个"
                                             className="textarea" rows={1}/>
                         </div>
-                    ):null
+                    ) : null
                 }
                 {
-                    tabType===1?null:(
+                    tabType === 1 ? null : (
                         <div className="textarea-wrap">
                             <label className="label-2">
                                 采购订单 ID：
@@ -1074,7 +1099,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     )
                 }
                 {
-                    tabType===0||tabType===4?(
+                    tabType === 0 || tabType === 4 ? (
                         <div className="textarea-wrap">
                             <label className="label-2">
                                 采购运单号：
@@ -1082,21 +1107,22 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                             <Input.TextArea value={pddShippingNumbers} onChange={this.onPddShippingNumbersInput}
                                             placeholder="一行一个" className="textarea" rows={1}/>
                         </div>
-                    ):null
+                    ) : null
                 }
                 {
-                    tabType===2||tabType===3||tabType===4?(
+                    tabType === 2 || tabType === 3 || tabType === 4 ? (
                         <div className="textarea-wrap">
                             <label className="label-2">
                                 采购父订单 ID：
                             </label>
-                            <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput} placeholder="一行一个"
+                            <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput}
+                                            placeholder="一行一个"
                                             className="textarea" rows={1}/>
                         </div>
-                    ):null
+                    ) : null
                 }
                 {
-                    tabType===2?(
+                    tabType === 2 ? (
                         <div className="input-item input-item-next">
                             <label className="label-2">采购时间：</label>
                             <DatePicker
@@ -1119,7 +1145,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                 placeholder="请选择"
                             />
                         </div>
-                    ):null
+                    ) : null
                 }
                 <div className="row">
                     <Button loading={searchLoading} disabled={refreshLoading || dataLoading && !searchLoading}
@@ -1127,7 +1153,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                         搜索
                     </Button>
                     {
-                        tabType===2?null:(
+                        tabType === 2 ? null : (
                             <Button className="button-more" onClick={this.toggleMoreForm}>
                                 更多搜索条件
                             </Button>
@@ -1137,14 +1163,15 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                             className="button-refresh" onClick={this.onRefresh}>
                         刷新
                     </Button>*/}
-                    <Button disabled={selectedRowKeys.length===0} loading={patBtnLoading} className='button-refresh' onClick={this.patAction}>
+                    <Button disabled={selectedRowKeys.length === 0} loading={patBtnLoading} className='button-refresh'
+                            onClick={this.patAction}>
                         一键拍单
                     </Button>
-                    <Button disabled={selectedRowKeys.length===0} loading={cancelPatBtnLoading}
+                    <Button disabled={selectedRowKeys.length === 0} loading={cancelPatBtnLoading}
                             className="button-refresh" onClick={this.onCancelPadOrder}>
                         取消采购单
                     </Button>
-                    <Button disabled={selectedRowKeys.length===0} loading={cancelSaleBtnLoading}
+                    <Button disabled={selectedRowKeys.length === 0} loading={cancelSaleBtnLoading}
                             className="button-refresh" onClick={this.onCancelSaleOrder}>
                         取消销售单
                     </Button>
@@ -1154,8 +1181,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 </div>
 
                 {
-                    showMoreSearch?
-                        tabType===0?(
+                    showMoreSearch ?
+                        tabType === 0 ? (
                             <div className="search-more">
                                 <div>
                                     <div className="input-item">
@@ -1213,7 +1240,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">
                                             pdd sku id：
                                         </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput} placeholder="一行一个"
+                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
+                                                        placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
                                 </div>
@@ -1222,40 +1250,45 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">销售订单状态：</label>
                                         <Select value={String(orderStatus)} placeholder="全部" className="select"
                                                 onChange={this.onOrderStatus}>
-                                            {orderStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {orderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                          value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                     <div className="input-item">
                                         <label className="label-2">采购订单状态：</label>
                                         <Select value={String(pddOrderStatus)} placeholder="全部" className="select"
                                                 onChange={this.onPddOrderStatus}>
-                                            {pddOrderStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {pddOrderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                             value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                     <div className="input-item">
                                         <label className="label-2">采购支付状态：</label>
                                         <Select value={String(pddPayStatus)} placeholder="全部" className="select"
                                                 onChange={this.onPddPayStatus}>
-                                            {pddPayStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {pddPayStatusList.map((item) => <Select.Option key={item.key}
+                                                                                           value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                     <div className="input-item">
                                         <label className="label-2">采购配送状态：</label>
                                         <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
                                                 onChange={this.onPddShippingStatus}>
-                                            {pddShippingStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {pddShippingStatusList.map((item) => <Select.Option key={item.key}
+                                                                                                value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                     <div className="input-item">
                                         <label className="label-2">采购取消原因：</label>
                                         <Select value={String(pddOrderCancelType)} placeholder="全部" className="select"
                                                 onChange={this.onPddCancelReason}>
-                                            {pddCancelReasonList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {pddCancelReasonList.map((item) => <Select.Option key={item.key}
+                                                                                              value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                 </div>
                             </div>
-                        ):tabType===1?(
+                        ) : tabType === 1 ? (
                             <div className="search-more">
                                 <div>
                                     <div className="input-item">
@@ -1284,7 +1317,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">销售订单状态：</label>
                                         <Select value={String(orderStatus)} placeholder="全部" className="select"
                                                 onChange={this.onOrderStatus}>
-                                            {orderStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {orderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                          value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                     <div className="textarea-wrap">
@@ -1298,12 +1332,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">
                                             pdd sku id：
                                         </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput} placeholder="一行一个"
+                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
+                                                        placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
                                 </div>
                             </div>
-                        ):tabType===3?(
+                        ) : tabType === 3 ? (
                             <div className="search-more">
                                 <div>
                                     <div className="input-item">
@@ -1361,12 +1396,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">
                                             pdd sku id：
                                         </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput} placeholder="一行一个"
+                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
+                                                        placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
                                 </div>
                             </div>
-                        ):tabType===4?(
+                        ) : tabType === 4 ? (
                             <div className="search-more">
                                 <div>
                                     <div className="input-item">
@@ -1424,20 +1460,22 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                         <label className="label-2">
                                             pdd sku id：
                                         </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput} placeholder="一行一个"
+                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
+                                                        placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
                                     <div className="input-item input-item-next">
                                         <label className="label-2">采购配送状态：</label>
                                         <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
                                                 onChange={this.onPddShippingStatus}>
-                                            {pddShippingStatusList.map((item)=><Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)}
+                                            {pddShippingStatusList.map((item) => <Select.Option key={item.key}
+                                                                                                value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                 </div>
                             </div>
-                        ):null
-                    :null
+                        ) : null
+                        : null
                 }
 
                 <Divider className="divider"/>
@@ -1446,7 +1484,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     className="data-grid"
                     bordered={true}
                     rowSelection={rowSelection}
-                    columns={tabType===2?this.getPayColumns():this.getColumns()}
+                    columns={tabType === 2 ? this.getPayColumns() : this.getColumns()}
                     dataSource={dataSet}
                     scroll={{ x: true, y: 700 }}
                     pagination={false}

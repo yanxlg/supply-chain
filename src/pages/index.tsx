@@ -14,6 +14,8 @@ const { TabPane } = Tabs;
 const Index: React.FC = (props: {}) => {
     const [activeKey, setActiveKey] = useState('1');
     const onChange = useCallback((activeKey: string) => setActiveKey(activeKey), []);
+    const [allTotal,setAllTotal] = useState<number>();
+    const [payTotal,setPayTotal] = useState<number>();
     return useMemo(() => {
         return (
             <main className="main">
@@ -32,14 +34,14 @@ const Index: React.FC = (props: {}) => {
                             activeKey={activeKey}
                             type="card"
                             children={[
-                                <TabPane tab="全部" key="1">
-                                    <TabChild tabType={0}/>
+                                <TabPane tab={allTotal === void 0 ?"全部":`全部(${allTotal})`} key="1">
+                                    <TabChild tabType={0} setAllTotal={setAllTotal} setPayTotal={setPayTotal}/>
                                 </TabPane>,
                                 /*<TabPane tab="待拍单" key="2">
                                     <TabChild type={2}/>
                                 </TabPane>,*/
-                                <TabPane tab="待支付" key="3">
-                                    <TabChild tabType={2}/>
+                                <TabPane tab={payTotal === void 0 ?"待支付":`待支付(${payTotal})`} key="3">
+                                    <TabChild tabType={2} setAllTotal={setAllTotal} setPayTotal={setPayTotal}/>
                                 </TabPane>,
                                 /*<TabPane tab="待发货" key="4">
                                     <TabChild type={4}/>
@@ -56,7 +58,7 @@ const Index: React.FC = (props: {}) => {
                 </div>
             </main>
         );
-    }, [activeKey, props]);
+    }, [activeKey, props,allTotal,payTotal]);
 };
 
 export default Index;
