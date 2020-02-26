@@ -1229,6 +1229,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                             placeholder="请选择"
                                         />
                                     </div>
+                                </div>
+                                <div className="row">
                                     <div className="textarea-wrap">
                                         <label className="label-2">
                                             vv Goods id：
@@ -1244,6 +1246,19 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                         placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
+
+                                    {
+                                        tabType === 0? (
+                                            <div className="textarea-wrap">
+                                                <label className="label-2">
+                                                    采购父订单 ID：
+                                                </label>
+                                                <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput}
+                                                                placeholder="一行一个"
+                                                                className="textarea" rows={1}/>
+                                            </div>
+                                        ) : null
+                                    }
                                 </div>
                                 <div className="row">
                                     <div className="input-item">
