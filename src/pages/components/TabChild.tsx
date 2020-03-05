@@ -1,8 +1,7 @@
 import React from 'react';
 import moment from 'moment';
-import { Button, Card, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, Checkbox, message } from 'antd';
+import { Button, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, message } from 'antd';
 import { BindAll } from 'lodash-decorators';
-import User from '@/storage/User';
 import QRCode from 'qrcode.react';
 import {
     filterOrder,
@@ -39,6 +38,7 @@ declare interface IDataItem {
     purchase_shipping_status: string;
     pdd_parent_order_sn: string;
     purchase_order_remark: string;
+    purchase_order_desc?:string;
 
     _purchase_tracking_number?: string;
     _purchase_order_remark?: string;
@@ -805,10 +805,11 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'purchase_order_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) => {
+                render: (text: string,record) => {
                     const status = String(text);
                     const { pddOrderStatusMap } = this.state;
-                    return pddOrderStatusMap[status] || '';
+                    const desc = record.purchase_order_desc;
+                    return status === '4'?`${pddOrderStatusMap[status]}${desc?`:${record.purchase_order_desc}`:''}`:pddOrderStatusMap[status] || '';
                 },
             },
             {
@@ -1040,10 +1041,11 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'purchase_order_status',
                 width: '134px',
                 align: 'center',
-                render: (text: string) => {
+                render: (text: string,record) => {
                     const status = String(text);
                     const { pddOrderStatusMap } = this.state;
-                    return pddOrderStatusMap[status] || '';
+                    const desc = record.purchase_order_desc;
+                    return status === '4'?`${pddOrderStatusMap[status]}${desc?`:${record.purchase_order_desc}`:''}`:pddOrderStatusMap[status] || '';
                 },
             },
             {
