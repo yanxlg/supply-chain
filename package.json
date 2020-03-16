@@ -1,5 +1,6 @@
 {
     "private": true,
+    "version": "1.1",
     "scripts": {
         "start": "umi dev",
         "build": "umi build",
@@ -9,8 +10,8 @@
         "precommit": "lint-staged"
     },
     "dependencies": {
-        "dva": "^2.6.0-beta.6",
-        "antd": "^3.19.5",
+        "dva": "^2.4.1",
+        "antd": "^4.0.3",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
         "lodash-decorators": "^6.0.1",

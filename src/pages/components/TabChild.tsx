@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { ReactText } from 'react';
 import moment from 'moment';
-import { Button, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, message } from 'antd';
+import { Button, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, message, Modal } from 'antd';
 import { BindAll } from 'lodash-decorators';
 import QRCode from 'qrcode.react';
 import {
@@ -14,6 +14,8 @@ import {
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
 import { ShippingModal } from './ShippingModal';
+import HistoryGoodsList from '@/pages/components/HistoryGoodsList';
+import BeatServiceModal from '@/pages/components/BeatServiceModal';
 
 
 declare interface IDataItem {
@@ -43,6 +45,10 @@ declare interface IDataItem {
     _purchase_tracking_number?: string;
     _purchase_order_remark?: string;
     payStatus?: 1 | 2 | 3;
+
+    show_history:0|1;
+    show_reorder:0|1;
+    purchase_order_goods_id:string;
 }
 
 
@@ -50,7 +56,17 @@ declare interface IStatusMap {
     [key: string]: string;
 }
 
+declare interface IStoreMap{
+    [key: string]: string;
+}
+
 declare interface IStatesItem {
+    key: string;
+    value: string;
+}
+
+
+declare interface IStoreItem{
     key: string;
     value: string;
 }
@@ -80,6 +96,8 @@ declare interface IIndexState {
     pddOrderStartTime?: string;
     pddOrderEndTime?: string;
     vovaGoodsIds?: string;
+    shopName?:string;
+    pddGoodsIds?:string;
 
 
     // 分页
@@ -107,6 +125,8 @@ declare interface IIndexState {
     pddPayStatusMap: IStatusMap;
     pddShippingStatusList: IStatesItem[];
     pddShippingStatusMap: IStatusMap;
+    storeList:IStoreItem[];
+    storeMap:IStoreMap;
 
     pddCancelReasonList: IStatesItem[];
     pddCancelReasonMap: IStatusMap;
@@ -118,6 +138,12 @@ declare interface IIndexState {
         image_url?: string;
         visible: boolean;
     };
+
+    historyVisible:boolean;
+    historySaleOrderGoodsSn?:string;
+    beatModal:boolean;
+    beatPurchaseOrderGoodsId?:string;
+    beatSaleOrderGoodsSn?:string;
 }
 
 declare interface ITabChildProps {
@@ -150,6 +176,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pageNumber: 1,
             pageSize: 100,
             total: 0,
+            shopName:"",
+            pddGoodsIds:"",
             patBtnLoading: false,
             cancelPatBtnLoading: false,
             cancelSaleBtnLoading: false,
@@ -165,15 +193,19 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddPayStatusList: [],
             pddShippingStatusList: [],
             pddCancelReasonList: [],
+            storeList:[],
             orderStatusMap: {},
             pddOrderStatusMap: {},
             pddPayStatusMap: {},
             pddShippingStatusMap: {},
             pddCancelReasonMap: {},
+            storeMap:{},
             showMoreSearch: false,
             trackModalId: {
                 visible: false,
             },
+            historyVisible:false,
+            beatModal:false
         };
     }
 
@@ -190,6 +222,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     private onPddSkuIdsInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
         this.setState({
             pddSkuIds: e.target.value,
+        });
+    }
+
+    private onPddGoodsIdsInput(e: React.ChangeEvent<HTMLTextAreaElement>){
+        this.setState({
+            pddGoodsIds: e.target.value,
         });
     }
 
@@ -381,6 +419,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             vovaGoodsIds,
             pddParentOrderSn,
             pddOrderCancelType,
+            shopName,
         } = this.state;
         const { tabType } = this.props;
         return getOrderList({
@@ -402,12 +441,14 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddParentOrderSn,
             tabType,
             pddOrderCancelType,
-        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, orderStatusList = {}, pddOrderStatusList = {}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
+            merchant_id:shopName,
+        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, orderStatusList = {}, pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             const orderStatusArr = this.objToArr(orderStatusList);
             const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
             const pddPayStatusArr = this.objToArr(pddPayStatusList);
             const pddShippingStatusArr = this.objToArr(pddShippingStatusList);
             const pddCancelReasonArr = this.objToArr(pddCancelReasonList);
+            const storeArr = this.objToArr(merchantShop);
             this.setState({
                 dataSet: list,
                 total: total,
@@ -417,6 +458,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 merchantAccount,
                 pddUrl,
                 merchantUrl,
+                storeMap:merchantShop,
+                storeList:storeArr,
                 orderStatusList: orderStatusArr,
                 pddOrderStatusList: pddOrderStatusArr,
                 pddPayStatusList: pddPayStatusArr,
@@ -465,6 +508,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             vovaGoodsIds,
             pddParentOrderSn,
             pddOrderCancelType,
+            shopName
         } = this.state;
         const { tabType } = this.props;
         this.setState({
@@ -491,6 +535,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddParentOrderSn,
             tabType,
             pddOrderCancelType,
+            merchant_id:shopName,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             this.setState({
                 dataSet: list,
@@ -718,6 +763,15 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
             },
             {
+                title: '店铺名称',
+                dataIndex: 'merchant_id',
+                width: '178px',
+                align: 'center',
+                render:(_,record)=>{
+                    return this.state.storeMap[_];
+                }
+            },
+            {
                 title: 'vv Goods id',
                 dataIndex: 'vova_goods_id',
                 width: '182px',
@@ -728,6 +782,29 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'pdd_sku',
                 width: '223px',
                 align: 'center',
+                render:(_:string,record)=>{
+                    const {show_history,show_reorder,order_goods_sn,purchase_order_goods_id} = record;
+                    return (
+                        <div>
+                            {_}
+                            {
+                                Number(show_history)===1?<Button onClick={()=>{this.setState({
+                                    historyVisible:true,
+                                    historySaleOrderGoodsSn:order_goods_sn
+                                })}}>历史商品</Button>:null
+                            }
+                            {
+                                Number(show_reorder)===1?<Button onClick={()=>{
+                                    this.setState({
+                                        beatModal:true,
+                                        beatSaleOrderGoodsSn:order_goods_sn,
+                                        beatPurchaseOrderGoodsId:purchase_order_goods_id
+                                    })
+                                }}>相似款代拍</Button>:null
+                            }
+                        </div>
+                    )
+                }
             },
             {
                 title: 'pdd goods id',
@@ -1087,13 +1164,24 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         ];
     }
 
-    private onSelectChange(selectedRowKeys: number[] | string[]) {
+    private onSelectChange(selectedRowKeys: ReactText[]) {
         this.setState({ selectedRowKeys: selectedRowKeys as string[] });
     };
 
+    private closeBeatModal(){
+        this.setState({
+            beatModal:false
+        })
+    }
+
+    private onShopNameChange(value: string){
+        this.setState({
+            shopName:value
+        })
+    }
     render() {
         const { tabType } = this.props;
-        const { pddCancelReasonList, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { pddCancelReasonList,pddGoodsIds,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1104,75 +1192,119 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         return (
             <div>
                 {
-                    tabType !== 2 ? (
-                        <div className="textarea-wrap">
-                            <label className="label-2">
-                                销售订单 ID：
-                            </label>
-                            <Input.TextArea value={orderSns} onChange={this.onOrderSnsInput} placeholder="一行一个"
-                                            className="textarea" rows={1}/>
+                    tabType ===0?(
+                        <React.Fragment>
+                            <div>
+                                <div className="input-item">
+                                    <label className="label-2">销售时间：</label>
+                                    <DatePicker
+                                        format="YYYY-MM-DD"
+                                        disabledDate={this.disabledStartDate}
+                                        value={orderStartTime ? moment(orderStartTime) : null}
+                                        onChange={this.onOrderStartTimeChange}
+                                        getPopupContainer={TabChild.getCalendarContainer}
+                                        className="datepicker"
+                                        placeholder="请选择"
+                                    />
+                                    <span className="datepicker-separator"/>
+                                    <DatePicker
+                                        format="YYYY-MM-DD"
+                                        disabledDate={this.disabledEndDate}
+                                        value={orderEndTime ? moment(orderEndTime) : null}
+                                        onChange={this.onOrderEndTimeChange}
+                                        getPopupContainer={TabChild.getCalendarContainer}
+                                        className="datepicker"
+                                        placeholder="请选择"
+                                    />
+                                </div>
+                                <div className="input-item">
+                                    <label className="label-2">店铺名称：</label>
+                                    <Select value={String(shopName)} placeholder="全部" className="select"
+                                            onChange={this.onShopNameChange}>
+                                        <Select.Option value="">全部</Select.Option>
+                                        {
+                                            storeList.map((item) =>
+                                                <Select.Option key={item.key} value={item.key}>{item.value}</Select.Option>)
+                                        }
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="input-item">
+                                    <label className="label-2">销售订单状态：</label>
+                                    <Select value={String(orderStatus)} placeholder="全部" className="select"
+                                            onChange={this.onOrderStatus}>
+                                        {orderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                      value={item.key}>{item.value}</Select.Option>)}
+                                    </Select>
+                                </div>
+                                <div className="input-item">
+                                    <label className="label-2">采购订单状态：</label>
+                                    <Select value={String(pddOrderStatus)} placeholder="全部" className="select"
+                                            onChange={this.onPddOrderStatus}>
+                                        {pddOrderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                         value={item.key}>{item.value}</Select.Option>)}
+                                    </Select>
+                                </div>
+                                <div className="input-item">
+                                    <label className="label-2">采购支付状态：</label>
+                                    <Select value={String(pddPayStatus)} placeholder="全部" className="select"
+                                            onChange={this.onPddPayStatus}>
+                                        {pddPayStatusList.map((item) => <Select.Option key={item.key}
+                                                                                       value={item.key}>{item.value}</Select.Option>)}
+                                    </Select>
+                                </div>
+                                <div className="input-item">
+                                    <label className="label-2">采购配送状态：</label>
+                                    <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
+                                            onChange={this.onPddShippingStatus}>
+                                        {pddShippingStatusList.map((item) => <Select.Option key={item.key}
+                                                                                            value={item.key}>{item.value}</Select.Option>)}
+                                    </Select>
+                                </div>
+                            </div>
+                        </React.Fragment>
+                    ):tabType===2?(
+                        <div>
+                            <div className="input-item">
+                                <label className="label-2">采购时间：</label>
+                                <DatePicker
+                                    format="YYYY-MM-DD"
+                                    disabledDate={this.disabledPddStartDate}
+                                    value={pddOrderStartTime ? moment(pddOrderStartTime) : null}
+                                    onChange={this.onPddOrderStartTimeChange}
+                                    getPopupContainer={TabChild.getCalendarContainer}
+                                    className="datepicker"
+                                    placeholder="请选择"
+                                />
+                                <span className="datepicker-separator"/>
+                                <DatePicker
+                                    format="YYYY-MM-DD"
+                                    disabledDate={this.disabledPddEndDate}
+                                    value={pddOrderEndTime ? moment(pddOrderEndTime) : null}
+                                    onChange={this.onPddOrderEndTimeChange}
+                                    getPopupContainer={TabChild.getCalendarContainer}
+                                    className="datepicker"
+                                    placeholder="请选择"
+                                />
+                            </div>
+                            <div className="textarea-wrap">
+                                <label className="label-2">
+                                    采购订单 ID：
+                                </label>
+                                <Input.TextArea value={pddOrderSns} onChange={this.onPddOrderSnsInput} placeholder="一行一个"
+                                                className="textarea" rows={1}/>
+                            </div>
+                            <div className="textarea-wrap">
+                                <label className="label-2">
+                                    采购父订单 ID：
+                                </label>
+                                <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput}
+                                                placeholder="一行一个"
+                                                className="textarea" rows={1}/>
+                            </div>
                         </div>
-                    ) : null
-                }
-                {
-                    tabType === 1 ? null : (
-                        <div className="textarea-wrap">
-                            <label className="label-2">
-                                采购订单 ID：
-                            </label>
-                            <Input.TextArea value={pddOrderSns} onChange={this.onPddOrderSnsInput} placeholder="一行一个"
-                                            className="textarea" rows={1}/>
-                        </div>
-                    )
-                }
-                {
-                    tabType === 0 || tabType === 4 ? (
-                        <div className="textarea-wrap">
-                            <label className="label-2">
-                                采购运单号：
-                            </label>
-                            <Input.TextArea value={pddShippingNumbers} onChange={this.onPddShippingNumbersInput}
-                                            placeholder="一行一个" className="textarea" rows={1}/>
-                        </div>
-                    ) : null
-                }
-                {
-                    tabType === 2 || tabType === 3 || tabType === 4 ? (
-                        <div className="textarea-wrap">
-                            <label className="label-2">
-                                采购父订单 ID：
-                            </label>
-                            <Input.TextArea value={pddParentOrderSn} onChange={this.onpddParentOrderSnInput}
-                                            placeholder="一行一个"
-                                            className="textarea" rows={1}/>
-                        </div>
-                    ) : null
-                }
-                {
-                    tabType === 2 ? (
-                        <div className="input-item input-item-next">
-                            <label className="label-2">采购时间：</label>
-                            <DatePicker
-                                format="YYYY-MM-DD"
-                                disabledDate={this.disabledPddStartDate}
-                                value={pddOrderStartTime ? moment(pddOrderStartTime) : null}
-                                onChange={this.onPddOrderStartTimeChange}
-                                getCalendarContainer={TabChild.getCalendarContainer}
-                                className="datepicker"
-                                placeholder="请选择"
-                            />
-                            <span className="datepicker-separator"/>
-                            <DatePicker
-                                format="YYYY-MM-DD"
-                                disabledDate={this.disabledPddEndDate}
-                                value={pddOrderEndTime ? moment(pddOrderEndTime) : null}
-                                onChange={this.onPddOrderEndTimeChange}
-                                getCalendarContainer={TabChild.getCalendarContainer}
-                                className="datepicker"
-                                placeholder="请选择"
-                            />
-                        </div>
-                    ) : null
+                    ):null
                 }
                 <div className="row">
                     <Button loading={searchLoading} disabled={refreshLoading || dataLoading && !searchLoading}
@@ -1212,36 +1344,21 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                         tabType === 0 ? (
                             <div className="search-more">
                                 <div>
-                                    <div className="input-item">
-                                        <label className="label-2">销售时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledStartDate}
-                                            value={orderStartTime ? moment(orderStartTime) : null}
-                                            onChange={this.onOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledEndDate}
-                                            value={orderEndTime ? moment(orderEndTime) : null}
-                                            onChange={this.onOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
+                                    <div className="textarea-wrap">
+                                        <label className="label-2">
+                                            销售订单 ID：
+                                        </label>
+                                        <Input.TextArea value={orderSns} onChange={this.onOrderSnsInput} placeholder="一行一个"
+                                                        className="textarea" rows={1}/>
                                     </div>
-                                    <div className="input-item">
+                                    <div className="input-item input-item-next">
                                         <label className="label-2">采购时间：</label>
                                         <DatePicker
                                             format="YYYY-MM-DD"
                                             disabledDate={this.disabledPddStartDate}
                                             value={pddOrderStartTime ? moment(pddOrderStartTime) : null}
                                             onChange={this.onPddOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
+                                            getPopupContainer={TabChild.getCalendarContainer}
                                             className="datepicker"
                                             placeholder="请选择"
                                         />
@@ -1251,20 +1368,19 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                             disabledDate={this.disabledPddEndDate}
                                             value={pddOrderEndTime ? moment(pddOrderEndTime) : null}
                                             onChange={this.onPddOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
+                                            getPopupContainer={TabChild.getCalendarContainer}
                                             className="datepicker"
                                             placeholder="请选择"
                                         />
                                     </div>
-                                </div>
-                                <div className="row">
-                                    <div className="textarea-wrap">
+                                    <div className="textarea-wrap margin-left-none">
                                         <label className="label-2">
                                             vv Goods id：
                                         </label>
                                         <Input.TextArea value={vovaGoodsIds} onChange={this.onVovaGoodsIdInput}
                                                         placeholder="一行一个" className="textarea" rows={1}/>
                                     </div>
+
                                     <div className="textarea-wrap">
                                         <label className="label-2">
                                             pdd sku id：
@@ -1273,246 +1389,45 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                         placeholder="一行一个"
                                                         className="textarea" rows={1}/>
                                     </div>
-
-                                    {
-                                        tabType === 0 ? (
-                                            <div className="textarea-wrap">
-                                                <label className="label-2">
-                                                    采购父订单 ID：
-                                                </label>
-                                                <Input.TextArea value={pddParentOrderSn}
-                                                                onChange={this.onpddParentOrderSnInput}
-                                                                placeholder="一行一个"
-                                                                className="textarea" rows={1}/>
-                                            </div>
-                                        ) : null
-                                    }
+                                  {/*  <div className="textarea-wrap">
+                                        <label className="label-2">
+                                            pdd goods id：
+                                        </label>
+                                        <Input.TextArea value={pddGoodsIds} onChange={this.onPddGoodsIdsInput}
+                                                        placeholder="一行一个"
+                                                        className="textarea" rows={1}/>
+                                    </div>*/}
                                 </div>
                                 <div className="row">
-                                    <div className="input-item">
-                                        <label className="label-2">销售订单状态：</label>
-                                        <Select value={String(orderStatus)} placeholder="全部" className="select"
-                                                onChange={this.onOrderStatus}>
-                                            {orderStatusList.map((item) => <Select.Option key={item.key}
-                                                                                          value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
+                                    <div className="textarea-wrap">
+                                        <label className="label-2">
+                                            采购订单 ID：
+                                        </label>
+                                        <Input.TextArea value={pddOrderSns} onChange={this.onPddOrderSnsInput} placeholder="一行一个"
+                                                        className="textarea" rows={1}/>
                                     </div>
-                                    <div className="input-item">
-                                        <label className="label-2">采购订单状态：</label>
-                                        <Select value={String(pddOrderStatus)} placeholder="全部" className="select"
-                                                onChange={this.onPddOrderStatus}>
-                                            {pddOrderStatusList.map((item) => <Select.Option key={item.key}
-                                                                                             value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
+                                    <div className="textarea-wrap">
+                                        <label className="label-2">
+                                            采购运单号：
+                                        </label>
+                                        <Input.TextArea value={pddShippingNumbers} onChange={this.onPddShippingNumbersInput}
+                                                        placeholder="一行一个" className="textarea" rows={1}/>
                                     </div>
-                                    <div className="input-item">
-                                        <label className="label-2">采购支付状态：</label>
-                                        <Select value={String(pddPayStatus)} placeholder="全部" className="select"
-                                                onChange={this.onPddPayStatus}>
-                                            {pddPayStatusList.map((item) => <Select.Option key={item.key}
-                                                                                           value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
+                                    <div className="textarea-wrap">
+                                        <label className="label-2">
+                                            采购父订单 ID：
+                                        </label>
+                                        <Input.TextArea value={pddParentOrderSn}
+                                                        onChange={this.onpddParentOrderSnInput}
+                                                        placeholder="一行一个"
+                                                        className="textarea" rows={1}/>
                                     </div>
-                                    <div className="input-item">
-                                        <label className="label-2">采购配送状态：</label>
-                                        <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
-                                                onChange={this.onPddShippingStatus}>
-                                            {pddShippingStatusList.map((item) => <Select.Option key={item.key}
-                                                                                                value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
-                                    </div>
-                                    <div className="input-item">
+                                    <div className="input-item input-item-next">
                                         <label className="label-2">采购取消原因：</label>
                                         <Select value={String(pddOrderCancelType)} placeholder="全部" className="select"
                                                 onChange={this.onPddCancelReason}>
                                             {pddCancelReasonList.map((item) => <Select.Option key={item.key}
                                                                                               value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : tabType === 1 ? (
-                            <div className="search-more">
-                                <div>
-                                    <div className="input-item">
-                                        <label className="label-2">销售时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledStartDate}
-                                            value={orderStartTime ? moment(orderStartTime) : null}
-                                            onChange={this.onOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledEndDate}
-                                            value={orderEndTime ? moment(orderEndTime) : null}
-                                            onChange={this.onOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                    </div>
-                                    <div className="input-item">
-                                        <label className="label-2">销售订单状态：</label>
-                                        <Select value={String(orderStatus)} placeholder="全部" className="select"
-                                                onChange={this.onOrderStatus}>
-                                            {orderStatusList.map((item) => <Select.Option key={item.key}
-                                                                                          value={item.key}>{item.value}</Select.Option>)}
-                                        </Select>
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            vv Goods id：
-                                        </label>
-                                        <Input.TextArea value={vovaGoodsIds} onChange={this.onVovaGoodsIdInput}
-                                                        placeholder="一行一个" className="textarea" rows={1}/>
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            pdd sku id：
-                                        </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
-                                                        placeholder="一行一个"
-                                                        className="textarea" rows={1}/>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : tabType === 3 ? (
-                            <div className="search-more">
-                                <div>
-                                    <div className="input-item">
-                                        <label className="label-2">销售时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledStartDate}
-                                            value={orderStartTime ? moment(orderStartTime) : null}
-                                            onChange={this.onOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledEndDate}
-                                            value={orderEndTime ? moment(orderEndTime) : null}
-                                            onChange={this.onOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                    </div>
-                                    <div className="input-item">
-                                        <label className="label-2">采购时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledPddStartDate}
-                                            value={pddOrderStartTime ? moment(pddOrderStartTime) : null}
-                                            onChange={this.onPddOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledPddEndDate}
-                                            value={pddOrderEndTime ? moment(pddOrderEndTime) : null}
-                                            onChange={this.onPddOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            vv Goods id：
-                                        </label>
-                                        <Input.TextArea value={vovaGoodsIds} onChange={this.onVovaGoodsIdInput}
-                                                        placeholder="一行一个" className="textarea" rows={1}/>
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            pdd sku id：
-                                        </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
-                                                        placeholder="一行一个"
-                                                        className="textarea" rows={1}/>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : tabType === 4 ? (
-                            <div className="search-more">
-                                <div>
-                                    <div className="input-item">
-                                        <label className="label-2">销售时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledStartDate}
-                                            value={orderStartTime ? moment(orderStartTime) : null}
-                                            onChange={this.onOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledEndDate}
-                                            value={orderEndTime ? moment(orderEndTime) : null}
-                                            onChange={this.onOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                    </div>
-                                    <div className="input-item">
-                                        <label className="label-2">采购时间：</label>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledPddStartDate}
-                                            value={pddOrderStartTime ? moment(pddOrderStartTime) : null}
-                                            onChange={this.onPddOrderStartTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                        <span className="datepicker-separator"/>
-                                        <DatePicker
-                                            format="YYYY-MM-DD"
-                                            disabledDate={this.disabledPddEndDate}
-                                            value={pddOrderEndTime ? moment(pddOrderEndTime) : null}
-                                            onChange={this.onPddOrderEndTimeChange}
-                                            getCalendarContainer={TabChild.getCalendarContainer}
-                                            className="datepicker"
-                                            placeholder="请选择"
-                                        />
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            vv Goods id：
-                                        </label>
-                                        <Input.TextArea value={vovaGoodsIds} onChange={this.onVovaGoodsIdInput}
-                                                        placeholder="一行一个" className="textarea" rows={1}/>
-                                    </div>
-                                    <div className="textarea-wrap">
-                                        <label className="label-2">
-                                            pdd sku id：
-                                        </label>
-                                        <Input.TextArea value={pddSkuIds} onChange={this.onPddSkuIdsInput}
-                                                        placeholder="一行一个"
-                                                        className="textarea" rows={1}/>
-                                    </div>
-                                    <div className="input-item input-item-next">
-                                        <label className="label-2">采购配送状态：</label>
-                                        <Select value={String(pddShippingStatus)} placeholder="全部" className="select"
-                                                onChange={this.onPddShippingStatus}>
-                                            {pddShippingStatusList.map((item) => <Select.Option key={item.key}
-                                                                                                value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                 </div>
@@ -1529,7 +1444,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     rowSelection={rowSelection}
                     columns={tabType === 2 ? this.getPayColumns() : this.getColumns()}
                     dataSource={dataSet}
-                    scroll={{ x: true, y: 700 }}
+                    scroll={{ x: 'max-content', y: 700 }}
                     pagination={false}
                     loading={dataLoading}
                 />
@@ -1553,6 +1468,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 </div>
                 <ShippingModal visible={trackModalId.visible} main_url={trackModalId?.image_url}
                                pdd_order_sn={trackModalId?.pdd_order_sn} onClose={this.closeShippingModal}/>
+               <Modal title="历史商品记录" footer={false} visible={historyVisible} destroyOnClose={true} onCancel={()=>{this.setState({
+                   historyVisible:false
+               })}}>
+                   <HistoryGoodsList saleOrderGoodsSn={historySaleOrderGoodsSn}/>
+               </Modal>
+                <BeatServiceModal onSuccess={this.onFilter} visible={beatModal} purchaseOrderGoodsId={beatPurchaseOrderGoodsId} saleOrderGoodsSn={beatSaleOrderGoodsSn} onCancel={this.closeBeatModal}/>
             </div>
         );
     }

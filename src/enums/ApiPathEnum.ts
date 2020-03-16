@@ -10,6 +10,8 @@ enum ApiPathEnum {
     ConfirmPay = "/api/order/confirmPay",
     CancelSaleOrder = "/api/order/cancelSaleOrder",
     QueryTrack="/api/order/queryTrack",
+    QueryHistoryList='/api/order/historyOrderList',
+    UpdatePurchaseOrder='/api/order/changePurchaseOrder',
 }
 
 export { ApiPathEnum };

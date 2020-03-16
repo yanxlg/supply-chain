@@ -18,6 +18,7 @@ declare interface IBaseFilterProps {
     tabType?:0|1|2|3|4|5;
     pddParentOrderSn?:string;
     pddOrderCancelType?:number;
+    merchant_id?:string;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {
@@ -114,4 +115,26 @@ export async function queryShippingDetail(pdd_order_sn:string) {
             pdd_order_sn
         }
     })
+}
+
+
+export async function queryHistoryList(saleOrderGoodsSn:string) {
+    return request.post(ApiPathEnum.QueryHistoryList,{
+        requestType: 'form',
+        data:{
+            saleOrderGoodsSn
+        }
+    })
+}
+
+export async function updatePurchaseOrder(data:{
+    purchaseOrderGoodsId:string;
+    saleOrderGoodsSn:string;
+    goodsId:string;
+    skuId:string
+}) {
+    return request.post(ApiPathEnum.UpdatePurchaseOrder,{
+        requestType: 'form',
+        data:data
+    });
 }
