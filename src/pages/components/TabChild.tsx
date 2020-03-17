@@ -788,19 +788,19 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                         <div>
                             {_}
                             {
-                                Number(show_history)===1?<Button onClick={()=>{this.setState({
+                                Number(show_history)===1?<div><Button onClick={()=>{this.setState({
                                     historyVisible:true,
                                     historySaleOrderGoodsSn:order_goods_sn
-                                })}}>历史商品</Button>:null
+                                })}}>历史商品</Button></div>:null
                             }
                             {
-                                Number(show_reorder)===1?<Button onClick={()=>{
+                                Number(show_reorder)===1?<div><Button onClick={()=>{
                                     this.setState({
                                         beatModal:true,
                                         beatSaleOrderGoodsSn:order_goods_sn,
                                         beatPurchaseOrderGoodsId:purchase_order_goods_id
                                     })
-                                }}>相似款代拍</Button>:null
+                                }}>相似款代拍</Button></div>:null
                             }
                         </div>
                     )
