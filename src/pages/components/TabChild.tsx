@@ -778,6 +778,12 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
             },
             {
+                title: 'pdd goods id',
+                dataIndex: 'pdd_goods_id',
+                width: '223px',
+                align: 'center',
+            },
+            {
                 title: 'pdd sku id',
                 dataIndex: 'pdd_sku',
                 width: '223px',
@@ -805,12 +811,6 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                         </div>
                     )
                 }
-            },
-            {
-                title: 'pdd goods id',
-                dataIndex: 'pdd_goods_id',
-                width: '223px',
-                align: 'center',
             },
             {
                 title: '商品图片',
