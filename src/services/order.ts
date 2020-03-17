@@ -19,6 +19,7 @@ declare interface IBaseFilterProps {
     pddParentOrderSn?:string;
     pddOrderCancelType?:number;
     merchant_id?:string;
+    pddGoodsId?:string;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {
