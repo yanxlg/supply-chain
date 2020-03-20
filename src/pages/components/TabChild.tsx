@@ -9,13 +9,14 @@ import {
     cancelOrder,
     modifyMark,
     manualCreatePurchaseOrder,
-    exportOrderList, getOrderList, confirmPay, cancelSaleOrder,
+    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods,
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
 import { ShippingModal } from './ShippingModal';
 import HistoryGoodsList from '@/pages/components/HistoryGoodsList';
 import BeatServiceModal from '@/pages/components/BeatServiceModal';
+import ExportModal from '@/pages/components/ExportModal';
 
 
 declare interface IDataItem {
@@ -66,7 +67,7 @@ declare interface IStatesItem {
 }
 
 
-declare interface IStoreItem{
+export declare interface IStoreItem{
     key: string;
     value: string;
 }
@@ -109,6 +110,7 @@ declare interface IIndexState {
     searchLoading: boolean;
     refreshLoading: boolean;
     exportLoading: boolean;
+    exportLoading1: boolean;
     dataLoading: boolean;
     updateTrackingNumberLoading: boolean;
     patBtnLoading: boolean;// 拍单按钮loading
@@ -144,6 +146,8 @@ declare interface IIndexState {
     beatModal:boolean;
     beatPurchaseOrderGoodsId?:string;
     beatSaleOrderGoodsSn?:string;
+
+    exportModal:boolean;
 }
 
 declare interface ITabChildProps {
@@ -185,6 +189,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             searchLoading: false,
             refreshLoading: false,
             exportLoading: false,
+            exportLoading1: false,
             updateTrackingNumberLoading: false,
             dataSet: [],
             selectedRowKeys: [],
@@ -205,7 +210,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 visible: false,
             },
             historyVisible:false,
-            beatModal:false
+            beatModal:false,
+            exportModal:false
         };
     }
 
@@ -686,6 +692,28 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         });
     }
 
+    private onExportShop(){
+        this.setState({
+            exportLoading1:true
+        });
+        exportGoods().catch(()=>{
+            message.error("导出失败!");
+        }).finally(()=>{
+            this.setState({
+                exportLoading1:false
+            })
+        });
+
+        //
+        // this.setState({
+        //     exportModal:true
+        // })
+    }
+    private onExportCancel(){
+        this.setState({
+            exportModal:false
+        })
+    }
     private updateTrackingNumber(record: IDataItem) {
         this.setState({
             updateTrackingNumberLoading: true,
@@ -1189,7 +1217,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     }
     render() {
         const { tabType } = this.props;
-        const { pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1345,6 +1373,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     <Button className="button-export" loading={exportLoading} onClick={this.onExport}>
                         导出数据
                     </Button>
+                    {
+                        tabType === 0?(
+                            <Button className="button-export" loading={exportLoading1} onClick={this.onExportShop}>
+                                导出店铺商品
+                            </Button>
+                        ):null
+                    }
                 </div>
 
                 {
@@ -1482,6 +1517,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                    <HistoryGoodsList saleOrderGoodsSn={historySaleOrderGoodsSn}/>
                </Modal>
                 <BeatServiceModal onSuccess={this.onFilter} visible={beatModal} purchaseOrderGoodsId={beatPurchaseOrderGoodsId} saleOrderGoodsSn={beatSaleOrderGoodsSn} onCancel={this.closeBeatModal}/>
+                <ExportModal visible={exportModal} onCancel={this.onExportCancel} storeList={storeList}/>
             </div>
         );
     }

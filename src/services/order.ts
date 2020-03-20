@@ -100,6 +100,26 @@ export async function exportOrderList(params: IBaseFilterProps) {
     });
 }
 
+export async function exportGoods() {
+    return request.get(ApiPathEnum.ExportGoods, {
+        requestType: 'form',
+        responseType:"blob",
+        parseResponse:false
+    }).then((response)=>{
+        const disposition = response.headers.get('content-disposition');
+        const fileName = decodeURI(disposition.substring(disposition.indexOf('filename=')+9, disposition.length));
+        response.blob().then((blob:Blob)=>{
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        })
+    });
+}
+
 
 export async function confirmPay(pddParentOrderSn:string) {
     return request.post(ApiPathEnum.ConfirmPay,{
