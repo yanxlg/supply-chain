@@ -1,5 +1,6 @@
 import request from '@/utils/request';
 import { ApiPathEnum } from '@/enums/ApiPathEnum';
+import Qs from "qs";
 
 declare interface IBaseFilterProps {
     orderSns?: string;
@@ -162,12 +163,15 @@ export async function updatePurchaseOrder(data:{
 }
 
 
-export async function updateTag(data:{
+export async function updateTag({pddGoodsSkuId,tags}:{
     pddGoodsSkuId:string;
     tags:number[];
 }) {
     return request.post(ApiPathEnum.UpdateTag,{
         requestType: 'form',
-        data:data
+        data:{
+            pddGoodsSkuId,
+            tags:(tags||[]).join(",")
+        },
     });
 }

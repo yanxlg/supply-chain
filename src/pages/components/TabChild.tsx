@@ -1562,7 +1562,11 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                     <div className="input-item">
                                         <label className="label-2">商品属性标签：</label>
                                         <Select value={String(tagType)} placeholder="全部" className="select"
-                                                onChange={this.onPddOrderStatus}>
+                                                onChange={(value: string) =>{
+                                                    this.setState({
+                                                        tagType: Number(value),
+                                                    });
+                                                }}>
                                             {tagList.map((item) => <Select.Option key={item.key}
                                                                                              value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
