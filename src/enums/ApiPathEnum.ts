@@ -13,6 +13,7 @@ enum ApiPathEnum {
     QueryHistoryList='/api/order/historyOrderList',
     UpdatePurchaseOrder='/api/order/changePurchaseOrder',
     ExportGoods="/api/order/exportGoods",
+    UpdateTag="/api/order/setPddGoodsTag"
 }
 
 export { ApiPathEnum };

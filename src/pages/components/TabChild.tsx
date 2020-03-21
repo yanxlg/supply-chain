@@ -1,6 +1,6 @@
-import React, { ReactText } from 'react';
+import React, { ReactText, RefObject } from 'react';
 import moment from 'moment';
-import { Button, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, message, Modal } from 'antd';
+import { Button, Input, DatePicker, Select, Pagination, Divider, Table, Tooltip, message, Modal, Checkbox, Form } from 'antd';
 import { BindAll } from 'lodash-decorators';
 import QRCode from 'qrcode.react';
 import {
@@ -9,7 +9,7 @@ import {
     cancelOrder,
     modifyMark,
     manualCreatePurchaseOrder,
-    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods,
+    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods, updateTag,
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
@@ -17,6 +17,7 @@ import { ShippingModal } from './ShippingModal';
 import HistoryGoodsList from '@/pages/components/HistoryGoodsList';
 import BeatServiceModal from '@/pages/components/BeatServiceModal';
 import ExportModal from '@/pages/components/ExportModal';
+import { FormInstance } from 'antd/es/form';
 
 
 declare interface IDataItem {
@@ -42,6 +43,7 @@ declare interface IDataItem {
     pdd_parent_order_sn: string;
     purchase_order_remark: string;
     purchase_order_desc?:string;
+    pdd_sku?:string;
 
     _purchase_tracking_number?: string;
     _purchase_order_remark?: string;
@@ -99,6 +101,7 @@ declare interface IIndexState {
     vovaGoodsIds?: string;
     shopName?:string;
     pddGoodsId?:string;
+    tagType:number;
 
 
     // 分页
@@ -129,6 +132,11 @@ declare interface IIndexState {
     pddShippingStatusMap: IStatusMap;
     storeList:IStoreItem[];
     storeMap:IStoreMap;
+    failureReasonMap:IStatusMap;
+    failureReasonList:IStatesItem[];
+    tagMap:IStatusMap;
+    tagList:IStatesItem[];
+
 
     pddCancelReasonList: IStatesItem[];
     pddCancelReasonMap: IStatusMap;
@@ -177,6 +185,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddOrderCancelType: -1,
             orderStatus: -1,
             pddShippingStatus: -1,
+            tagType:-1,
             pageNumber: 1,
             pageSize: 100,
             total: 0,
@@ -198,6 +207,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddPayStatusList: [],
             pddShippingStatusList: [],
             pddCancelReasonList: [],
+            failureReasonList:[],
+            tagList:[],
             storeList:[],
             orderStatusMap: {},
             pddOrderStatusMap: {},
@@ -205,6 +216,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddShippingStatusMap: {},
             pddCancelReasonMap: {},
             storeMap:{},
+            failureReasonMap:{},
+            tagMap:{},
             showMoreSearch: false,
             trackModalId: {
                 visible: false,
@@ -426,7 +439,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddParentOrderSn,
             pddOrderCancelType,
             shopName,
-            pddGoodsId
+            pddGoodsId,
+            tagType
         } = this.state;
         const { tabType } = this.props;
         return getOrderList({
@@ -449,14 +463,16 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             tabType,
             pddOrderCancelType,
             pddGoodsId,
+            pddGoodsTag:tagType,
             merchant_id:shopName,
-        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, orderStatusList = {}, pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
+        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, orderStatusList = {}, pddGoodsTagList={},pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             const orderStatusArr = this.objToArr(orderStatusList);
             const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
             const pddPayStatusArr = this.objToArr(pddPayStatusList);
             const pddShippingStatusArr = this.objToArr(pddShippingStatusList);
             const pddCancelReasonArr = this.objToArr(pddCancelReasonList);
             const storeArr = this.objToArr(merchantShop);
+            const tagArr = this.objToArr(pddGoodsTagList);
             this.setState({
                 dataSet: list,
                 total: total,
@@ -468,6 +484,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 merchantUrl,
                 storeMap:merchantShop,
                 storeList:storeArr,
+                tagMap:pddGoodsTagList,
+                tagList:tagArr,
                 orderStatusList: orderStatusArr,
                 pddOrderStatusList: pddOrderStatusArr,
                 pddPayStatusList: pddPayStatusArr,
@@ -517,7 +535,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddParentOrderSn,
             pddOrderCancelType,
             shopName,
-            pddGoodsId
+            pddGoodsId,
+            tagType
         } = this.state;
         const { tabType } = this.props;
         this.setState({
@@ -545,6 +564,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             tabType,
             pddGoodsId,
             pddOrderCancelType,
+            pddGoodsTag:tagType,
             merchant_id:shopName,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             this.setState({
@@ -657,6 +677,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddOrderCancelType,
             shopName,
             pddGoodsId,
+            tagType
         } = this.state;
         this.setState({
             exportLoading: true,
@@ -681,6 +702,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             merchant_id:shopName,
             pddGoodsId,
             pddOrderCancelType,
+            pddGoodsTag:tagType,
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -774,6 +796,41 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             },
         });
     }
+    private addTag(tags:number[]|undefined,pddGoodsSkuId:string){
+        const {tagList} = this.state;
+        const ref:RefObject<FormInstance> = React.createRef();
+        const edit = !!tags;
+        Modal.info({
+            icon:undefined,
+            maskClosable:true,
+           content:(
+               <Form initialValues={{
+                   tags:tags
+               }} ref={ref}>
+                   <Form.Item name="tags">
+                       <Checkbox.Group>
+                           {
+                               tagList.map(({key,value})=>{
+                                   if(key==="-1"){
+                                       return null
+                                   }
+                                   return <Checkbox style={{margin:"5px 8px 5px 0"}} key={key} value={key}>{value}</Checkbox>
+                               })}
+                       </Checkbox.Group>
+                   </Form.Item>
+               </Form>
+           ),
+            onOk:()=>{
+                const tags = ref.current!.getFieldValue("tags");
+                return updateTag({tags,pddGoodsSkuId}).then(()=>{
+                    message.success(edit?"修改成功":"添加成功");
+                    this.onFilter();
+                },()=>{
+                    message.error(edit?"修改失败":"添加失败");
+                });
+            }
+        });
+    }
 
     private getColumns(): ColumnProps<IDataItem>[] {
         const { pageSize, pageNumber } = this.state;
@@ -865,6 +922,21 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 dataIndex: 'style_values',
                 width: '200px',
                 align: 'center',
+            },
+            {
+                title: '商品属性标签',
+                dataIndex: 'tags',
+                width: '200px',
+                align: 'center',
+                render:(tags:number[],record)=>{
+                    const {tagMap} = this.state;
+                    return (
+                        <>
+                            {tags.map(tag=>tagMap[tag]).join("、")}
+                            {!tags||tags.length===0?<Button onClick={()=>this.addTag(undefined,record.pdd_sku)}>添加标签</Button>:<Button onClick={()=>this.addTag(tags,record.pdd_sku)}>修改标签</Button>}
+                        </>
+                    )
+                }
             },
             {
                 title: '数量',
@@ -1217,7 +1289,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     }
     render() {
         const { tabType } = this.props;
-        const { exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { tagList,tagType,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1282,6 +1354,14 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                                                          value={item.key}>{item.value}</Select.Option>)}
                                     </Select>
                                 </div>
+                          {/*      <div className="input-item">
+                                    <label className="label-2">拍单失败原因：</label>
+                                    <Select value={String(pddOrderStatus)} placeholder="全部" className="select"
+                                            onChange={this.onPddOrderStatus}>
+                                        {pddOrderStatusList.map((item) => <Select.Option key={item.key}
+                                                                                         value={item.key}>{item.value}</Select.Option>)}
+                                    </Select>
+                                </div>*/}
                                 <div className="input-item">
                                     <label className="label-2">采购支付状态：</label>
                                     <Select value={String(pddPayStatus)} placeholder="全部" className="select"
@@ -1471,6 +1551,14 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                 onChange={this.onPddCancelReason}>
                                             {pddCancelReasonList.map((item) => <Select.Option key={item.key}
                                                                                               value={item.key}>{item.value}</Select.Option>)}
+                                        </Select>
+                                    </div>
+                                    <div className="input-item">
+                                        <label className="label-2">商品属性标签：</label>
+                                        <Select value={String(tagType)} placeholder="全部" className="select"
+                                                onChange={this.onPddOrderStatus}>
+                                            {tagList.map((item) => <Select.Option key={item.key}
+                                                                                             value={item.key}>{item.value}</Select.Option>)}
                                         </Select>
                                     </div>
                                 </div>

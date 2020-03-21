@@ -54,7 +54,7 @@ const config: IConfig = {
     ],
     proxy: {
         '/api': {
-            target: 'http://schain.vova.com.hk/',
+            target: 'http://schain-t.vova.com.hk/',
             changeOrigin: true,
             // pathRewrite: { '^/api': '' },
         },

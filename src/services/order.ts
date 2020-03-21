@@ -20,6 +20,7 @@ declare interface IBaseFilterProps {
     pddOrderCancelType?:number;
     merchant_id?:string;
     pddGoodsId?:string;
+    pddGoodsTag?:number;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {
@@ -155,6 +156,17 @@ export async function updatePurchaseOrder(data:{
     skuId:string
 }) {
     return request.post(ApiPathEnum.UpdatePurchaseOrder,{
+        requestType: 'form',
+        data:data
+    });
+}
+
+
+export async function updateTag(data:{
+    pddGoodsSkuId:string;
+    tags:number[];
+}) {
+    return request.post(ApiPathEnum.UpdateTag,{
         requestType: 'form',
         data:data
     });
