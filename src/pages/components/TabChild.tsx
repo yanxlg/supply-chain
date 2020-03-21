@@ -43,7 +43,7 @@ declare interface IDataItem {
     pdd_parent_order_sn: string;
     purchase_order_remark: string;
     purchase_order_desc?:string;
-    pdd_sku?:string;
+    pdd_sku:string;
 
     _purchase_tracking_number?: string;
     _purchase_order_remark?: string;
@@ -933,7 +933,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     return (
                         <>
                             {tags.map(tag=>tagMap[tag]).join("、")}
-                            {!tags||tags.length===0?<Button onClick={()=>this.addTag(undefined,record.pdd_sku)}>添加标签</Button>:<Button onClick={()=>this.addTag(tags,record.pdd_sku)}>修改标签</Button>}
+                            <div>
+                                {
+                                    !tags||tags.length===0
+                                        ?
+                                        <Button type="link" onClick={()=>this.addTag(undefined,record.pdd_sku)}>添加标签</Button>:
+                                        <Button type="link" onClick={()=>this.addTag(tags,record.pdd_sku)}>修改标签</Button>}
+                            </div>
                         </>
                     )
                 }
