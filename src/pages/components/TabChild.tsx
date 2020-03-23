@@ -1293,6 +1293,17 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             shopName:value
         })
     }
+
+    private calcX(rowSelection:any,columns:any){
+        let x: number = 0;
+        if (rowSelection && rowSelection.columnWidth) {
+            x += parseInt(rowSelection.columnWidth) || 0;
+        }
+        columns.forEach((column:any) => {
+            x += parseInt(column.width) || 0;
+        });
+        return x;
+    }
     render() {
         const { tabType } = this.props;
         const { tagList,tagType,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
@@ -1302,6 +1313,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             selectedRowKeys: selectedRowKeys,
             onChange: this.onSelectChange,
         };
+
+        const columns = tabType === 2 ? this.getPayColumns() : this.getColumns();
+        const scrollX =  this.calcX(rowSelection,columns);
 
         return (
             <div>
@@ -1583,9 +1597,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     className="data-grid"
                     bordered={true}
                     rowSelection={rowSelection}
-                    columns={tabType === 2 ? this.getPayColumns() : this.getColumns()}
+                    columns={columns}
                     dataSource={dataSet}
-                    scroll={{ x: 'max-content', y: 700 }}
+                    scroll={{ x: scrollX, y: 700 }}
                     pagination={false}
                     loading={dataLoading}
                 />
