@@ -1025,7 +1025,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                     return (
                         <>
                             {pddShippingStatusMap[status] || ''}
-                            {text === '1' ?
+                            {text === '1'||text === '2' ?
                                 <div><Button onClick={() => this.showShippingModal(record)}>物流轨迹</Button></div> : null}
                         </>
                     );
