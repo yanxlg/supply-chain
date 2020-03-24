@@ -9,7 +9,7 @@ import {
     cancelOrder,
     modifyMark,
     manualCreatePurchaseOrder,
-    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods, updateTag,
+    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods, updateTag, getLastLog,
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
@@ -18,6 +18,7 @@ import HistoryGoodsList from '@/pages/components/HistoryGoodsList';
 import BeatServiceModal from '@/pages/components/BeatServiceModal';
 import ExportModal from '@/pages/components/ExportModal';
 import { FormInstance } from 'antd/es/form';
+import LogView from '@/pages/components/LogView';
 
 
 declare interface IDataItem {
@@ -156,6 +157,20 @@ declare interface IIndexState {
     beatSaleOrderGoodsSn?:string;
 
     exportModal:boolean;
+
+
+    lastLogData?:{
+        id:string;
+        purchase_time:string;
+        all_submit:string;
+        can_purchase_sum:string;
+        wait_sum:string;
+        success_sum:string;
+        fail_sum:string;
+        create_time:string;
+        last_update_time:string;
+        status:string;
+    };
 }
 
 declare interface ITabChildProps {
@@ -224,12 +239,17 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             },
             historyVisible:false,
             beatModal:false,
-            exportModal:false
+            exportModal:false,
         };
     }
 
     componentDidMount(): void {
         this.onSearch();
+        getLastLog().then(({data})=>{
+            this.setState({
+                lastLogData:data
+            })
+        })
     }
 
     private onOrderSnsInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -1317,9 +1337,20 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         });
         return x;
     }
+
+    private showLogView(){
+        Modal.info({
+            icon:null,
+            title:"拍单日志",
+            content:<LogView/>,
+            width:1000,
+            maskClosable:true,
+        });
+    }
+
     render() {
         const { tabType } = this.props;
-        const { tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { lastLogData,tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1329,6 +1360,13 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
 
         const columns = tabType === 2 ? this.getPayColumns() : this.getColumns();
         const scrollX =  this.calcX(rowSelection,columns);
+
+        const logStatusMap:{[key:string]:string} = {
+            0:"待拍单",
+            1:"拍单中",
+            2:"拍单失败",
+            3:"拍单完成",
+        };
 
         return (
             <div>
@@ -1606,6 +1644,16 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 }
 
                 <Divider className="divider"/>
+                <div>
+                    操作时间：{lastLogData?.create_time}&emsp;
+                    当前状态：{logStatusMap[lastLogData?.status as string]}&emsp;
+                    总提交：{lastLogData?.all_submit}&emsp;
+                    有效订单：{lastLogData?.can_purchase_sum}&emsp;
+                    待拍单：{lastLogData?.wait_sum}&emsp;
+                    拍单成功：{lastLogData?.success_sum}&emsp;
+                    拍单失败：{lastLogData?.fail_sum}&emsp;
+                    <Button onClick={this.showLogView}>查看更多</Button>
+                </div>
                 <Table
                     rowKey="order_goods_sn"
                     className="data-grid"

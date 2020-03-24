@@ -37,6 +37,19 @@ export async function getOrderList(params: IFilterProps) {
     });
 }
 
+export async function getLastLog() {
+    return request.get(ApiPathEnum.QueryLastLog, {
+        requestType: 'form',
+    });
+}
+
+export async function getLogList() {
+    return request.get(ApiPathEnum.QueryLogList, {
+        requestType: 'form',
+    });
+}
+
+
 export async function filterOrder(params: IFilterProps) {
     return request.get(ApiPathEnum.FilterOrder, {
         requestType: 'form',

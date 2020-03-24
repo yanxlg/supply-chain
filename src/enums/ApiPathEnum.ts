@@ -13,7 +13,9 @@ enum ApiPathEnum {
     QueryHistoryList='/api/order/historyOrderList',
     UpdatePurchaseOrder='/api/order/changePurchaseOrder',
     ExportGoods="/api/order/exportGoods",
-    UpdateTag="/api/order/setPddGoodsTag"
+    UpdateTag="/api/order/setPddGoodsTag",
+    QueryLastLog = "/api/order/lastLog",
+    QueryLogList = "/api/order/twoDayList"
 }
 
 export { ApiPathEnum };
