@@ -377,6 +377,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
     private onPddOrderStatus(value: string) {
         this.setState({
             pddOrderStatus: Number(value),
+            purchaseError:""
         });
     }
 
@@ -1425,15 +1426,19 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                                                          value={item.key}>{item.value}</Select.Option>)}
                                     </Select>
                                 </div>
-                                <div className="input-item">
-                                    <label className="label-2">拍单失败原因：</label>
-                                    <Select value={String(purchaseError)} placeholder="全部" className="select"
-                                            onChange={this.onPurchaseErrorStatus}>
-                                        <Select.Option value="">全部</Select.Option>
-                                        {purchaseErrorList.map((item) => <Select.Option key={item.key} title={item.value}
-                                                                                         value={item.key}>{item.value||"--"}</Select.Option>)}
-                                    </Select>
-                                </div>
+                                {
+                                    String(pddOrderStatus) ==="4"?(
+                                        <div className="input-item">
+                                            <label className="label-2">拍单失败原因：</label>
+                                            <Select value={String(purchaseError)} placeholder="全部" className="select"
+                                                    onChange={this.onPurchaseErrorStatus}>
+                                                <Select.Option value="">全部</Select.Option>
+                                                {purchaseErrorList.map((item) => <Select.Option key={item.key} title={item.value}
+                                                                                                value={item.key}>{item.value||"--"}</Select.Option>)}
+                                            </Select>
+                                        </div>
+                                    ):null
+                                }
                                 <div className="input-item">
                                     <label className="label-2">采购支付状态：</label>
                                     <Select value={String(pddPayStatus)} placeholder="全部" className="select"
