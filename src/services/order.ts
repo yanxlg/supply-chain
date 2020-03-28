@@ -23,6 +23,7 @@ declare interface IBaseFilterProps {
     pddGoodsId?:string;
     pddGoodsTag?:number;
     purchaseOrderGoodsErrorCode?:string;
+    purchaseOrderGoodsErrorMsg?:string;
 }
 
 declare interface IFilterProps extends IBaseFilterProps {

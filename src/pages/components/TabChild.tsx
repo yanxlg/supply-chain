@@ -493,7 +493,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddGoodsId,
             pddGoodsTag:tagType,
             merchant_id:shopName,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined
+            purchaseOrderGoodsErrorCode:purchaseError||undefined,
+            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, purchaseOrderGoodsErrorCodeList=[],orderStatusList = {}, pddGoodsTagList={},pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             const orderStatusArr = this.objToArr(orderStatusList);
             const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
@@ -597,7 +598,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddOrderCancelType,
             pddGoodsTag:tagType,
             merchant_id:shopName,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined
+            purchaseOrderGoodsErrorCode:purchaseError||undefined,
+            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             this.setState({
                 dataSet: list,
@@ -736,7 +738,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddGoodsId,
             pddOrderCancelType,
             pddGoodsTag:tagType,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined
+            purchaseOrderGoodsErrorCode:purchaseError||undefined,
+            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -1433,7 +1436,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                             <Select value={String(purchaseError)} placeholder="全部" className="select"
                                                     onChange={this.onPurchaseErrorStatus}>
                                                 <Select.Option value="">全部</Select.Option>
-                                                {purchaseErrorList.map((item) => <Select.Option key={item.key} title={item.value}
+                                                {purchaseErrorList.map((item) => <Select.Option key={item.key + item.value} title={item.value}
                                                                                                 value={item.key}>{item.value||"--"}</Select.Option>)}
                                             </Select>
                                         </div>
