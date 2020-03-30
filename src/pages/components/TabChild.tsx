@@ -468,9 +468,10 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             shopName,
             pddGoodsId,
             tagType,
-            purchaseError
+            purchaseError=""
         } = this.state;
         const { tabType } = this.props;
+        const [errorCode,errorMessage]=purchaseError.split("&&");
         return getOrderList({
             page: 1,
             size: pageSize,
@@ -493,8 +494,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddGoodsId,
             pddGoodsTag:tagType,
             merchant_id:shopName,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined,
-            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
+            purchaseOrderGoodsErrorCode:errorCode||undefined,
+            purchaseOrderGoodsErrorMsg:errorMessage||undefined,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, purchaseOrderGoodsErrorCodeList=[],orderStatusList = {}, pddGoodsTagList={},pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             const orderStatusArr = this.objToArr(orderStatusList);
             const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
@@ -568,7 +569,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             shopName,
             pddGoodsId,
             tagType,
-            purchaseError
+            purchaseError=""
         } = this.state;
         const { tabType } = this.props;
         this.setState({
@@ -576,6 +577,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             refreshLoading: refreshLoading,
         });
         const nextPageSize = size || pageSize;
+        const [errorCode,errorMessage]=purchaseError.split("&&");
         return filterOrder({
             page: page,
             size: nextPageSize,
@@ -598,8 +600,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddOrderCancelType,
             pddGoodsTag:tagType,
             merchant_id:shopName,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined,
-            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
+            purchaseOrderGoodsErrorCode:errorCode||undefined,
+            purchaseOrderGoodsErrorMsg:errorMessage||undefined,
         }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             this.setState({
                 dataSet: list,
@@ -712,8 +714,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             shopName,
             pddGoodsId,
             tagType,
-            purchaseError
+            purchaseError=""
         } = this.state;
+        const [errorCode,errorMessage]=purchaseError.split("&&");
         this.setState({
             exportLoading: true,
         });
@@ -738,8 +741,8 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             pddGoodsId,
             pddOrderCancelType,
             pddGoodsTag:tagType,
-            purchaseOrderGoodsErrorCode:purchaseError||undefined,
-            purchaseOrderGoodsErrorMsg:this.state.purchaseErrorList.find(item=>item.key===purchaseError)?.value??undefined,
+            purchaseOrderGoodsErrorCode:errorCode||undefined,
+            purchaseOrderGoodsErrorMsg:errorMessage||undefined,
         }).then(() => {
             // 下载成功
         }).catch(() => {
@@ -1437,7 +1440,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                                                     onChange={this.onPurchaseErrorStatus}>
                                                 <Select.Option value="">全部</Select.Option>
                                                 {purchaseErrorList.map((item) => <Select.Option key={item.key + item.value} title={item.value}
-                                                                                                value={item.key}>{item.value||"--"}</Select.Option>)}
+                                                                                                value={item.key+"&&"+item.value}>{item.value||"--"}</Select.Option>)}
                                             </Select>
                                         </div>
                                     ):null
