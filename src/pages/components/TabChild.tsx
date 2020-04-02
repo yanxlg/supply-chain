@@ -19,6 +19,7 @@ import BeatServiceModal from '@/pages/components/BeatServiceModal';
 import ExportModal from '@/pages/components/ExportModal';
 import { FormInstance } from 'antd/es/form';
 import LogView from '@/pages/components/LogView';
+import CookieModal from '@/pages/components/CookieModal';
 
 
 declare interface IDataItem {
@@ -171,6 +172,8 @@ declare interface IIndexState {
         last_update_time:string;
         status:string;
     };
+
+    cookieVisible:boolean;
 }
 
 declare interface ITabChildProps {
@@ -240,6 +243,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             historyVisible:false,
             beatModal:false,
             exportModal:false,
+            cookieVisible:false
         };
     }
 
@@ -1355,9 +1359,21 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
         });
     }
 
+    private onCookie(){
+        this.setState({
+            cookieVisible:true
+        })
+    }
+
+    private closeCookie(){
+        this.setState({
+            cookieVisible:false
+        })
+    }
+
     render() {
         const { tabType } = this.props;
-        const { lastLogData,tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { cookieVisible,lastLogData,tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1543,6 +1559,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                             </Button>
                         ):null
                     }
+                    <Button className="button-export" onClick={this.onCookie}>
+                        Cookie维护
+                    </Button>
                 </div>
 
                 {
@@ -1703,6 +1722,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                </Modal>
                 <BeatServiceModal onSuccess={this.onFilter} visible={beatModal} purchaseOrderGoodsId={beatPurchaseOrderGoodsId} saleOrderGoodsSn={beatSaleOrderGoodsSn} onCancel={this.closeBeatModal}/>
                 <ExportModal visible={exportModal} onCancel={this.onExportCancel} storeList={storeList}/>
+                <CookieModal visible={cookieVisible} onClose={this.closeCookie}/>
             </div>
         );
     }

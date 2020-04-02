@@ -190,3 +190,20 @@ export async function updateTag({pddGoodsSkuId,tags}:{
         },
     });
 }
+
+
+export async function queryCookie() {
+    return request.get(ApiPathEnum.QueryCookie,{
+        requestType: 'form',
+    });
+}
+
+export async function saveCookie({account_id,cookie}:{account_id:string;cookie:string}) {
+    return request.post(ApiPathEnum.UpdateCookie,{
+        requestType: 'form',
+        data:{
+            account_id,
+            cookie
+        }
+    });
+}

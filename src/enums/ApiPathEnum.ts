@@ -15,7 +15,9 @@ enum ApiPathEnum {
     ExportGoods="/api/order/exportGoods",
     UpdateTag="/api/order/setPddGoodsTag",
     QueryLastLog = "/api/order/lastLog",
-    QueryLogList = "/api/order/twoDayList"
+    QueryLogList = "/api/order/twoDayList",
+    QueryCookie="/api/account/list",
+    UpdateCookie="/api/account/update",
 }
 
 export { ApiPathEnum };
