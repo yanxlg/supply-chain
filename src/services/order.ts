@@ -207,3 +207,19 @@ export async function saveCookie({account_id,cookie}:{account_id:string;cookie:s
         }
     });
 }
+
+
+export async function batchRefund (salesOrderGoodsSn:string) {
+    return request.post(ApiPathEnum.BatchRefund, {
+        requestType: 'form',
+        data: {salesOrderGoodsSn},
+    });
+}
+
+
+export async function afterSalesConfirmDelivery(data:any) {
+    return request.post(ApiPathEnum.AfterSalesConfirmDelivery, {
+        requestType: 'form',
+        data: data,
+    });
+}

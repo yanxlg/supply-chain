@@ -18,6 +18,8 @@ enum ApiPathEnum {
     QueryLogList = "/api/order/twoDayList",
     QueryCookie="/api/account/list",
     UpdateCookie="/api/account/update",
+    BatchRefund='/api/order/afterSalesPurchaseOrder',
+    AfterSalesConfirmDelivery = '/api/order/afterSalesConfirmDelivery'
 }
 
 export { ApiPathEnum };

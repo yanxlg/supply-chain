@@ -9,7 +9,7 @@ import {
     cancelOrder,
     modifyMark,
     manualCreatePurchaseOrder,
-    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods, updateTag, getLastLog,
+    exportOrderList, getOrderList, confirmPay, cancelSaleOrder, exportGoods, updateTag, getLastLog, batchRefund,
 } from '@/services/order';
 import { ColumnProps } from 'antd/lib/table';
 import '../../styles/index.less';
@@ -20,9 +20,11 @@ import ExportModal from '@/pages/components/ExportModal';
 import { FormInstance } from 'antd/es/form';
 import LogView from '@/pages/components/LogView';
 import CookieModal from '@/pages/components/CookieModal';
+import LoadingButton from '@/pages/components/LoadingBtn';
+import RefundModal from '@/pages/components/RefundModal';
 
 
-declare interface IDataItem {
+export declare interface IDataItem {
     'confirm_time': string,
     'order_goods_sn': string,
     'vova_goods_id': string,
@@ -174,6 +176,12 @@ declare interface IIndexState {
     };
 
     cookieVisible:boolean;
+
+    expressList:Array<{
+        shippingId: number;
+        shippingName: string;
+    }>
+    refundVisible:false|IDataItem;
 }
 
 declare interface ITabChildProps {
@@ -243,7 +251,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             historyVisible:false,
             beatModal:false,
             exportModal:false,
-            cookieVisible:false
+            cookieVisible:false,
+            expressList:[],
+            refundVisible:false
         };
     }
 
@@ -500,7 +510,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             merchant_id:shopName,
             purchaseOrderGoodsErrorCode:errorCode||undefined,
             purchaseOrderGoodsErrorMsg:errorMessage||undefined,
-        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0, purchaseOrderGoodsErrorCodeList=[],orderStatusList = {}, pddGoodsTagList={},pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
+        }).then(({ data: { list = [], total, allTotal = 0, payTotal = 0,expressList, purchaseOrderGoodsErrorCodeList=[],orderStatusList = {}, pddGoodsTagList={},pddOrderStatusList = {},merchantShop={}, pddPayStatusList = {}, pddShippingStatusList = {}, pddOrderCancelTypeList: pddCancelReasonList = {}, accountInfo: { pddAccount = '', merchantAccount = '', pddUrl = '', merchantUrl = '' } = {} } }) => {
             const orderStatusArr = this.objToArr(orderStatusList);
             const pddOrderStatusArr = this.objToArr(pddOrderStatusList);
             const pddPayStatusArr = this.objToArr(pddPayStatusList);
@@ -509,6 +519,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             const storeArr = this.objToArr(merchantShop);
             const tagArr = this.objToArr(pddGoodsTagList);
             this.setState({
+                expressList,
                 dataSet: list,
                 total: total,
                 pageNumber: 1,
@@ -658,6 +669,14 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
             this.setState({
                 cancelSaleBtnLoading: false,
             });
+        });
+    }
+
+    private onBatchRefund(){
+        const { selectedRowKeys } = this.state;
+        return batchRefund(selectedRowKeys.join(',')).then(({ message: msg }) => {
+            message.success(msg);
+            this.onFilter();
         });
     }
 
@@ -1104,6 +1123,23 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 align: 'center',
             },
             {
+                title: '填写退货信息',
+                width: '140px',
+                align: 'center',
+                dataIndex:"afterSalesStatus",
+                render:(_:any,record:IDataItem)=>{
+                    return Number(_) === 10?<Button type="link" onClick={()=>this.setState({
+                        refundVisible:record
+                    })}>填写退货信息</Button>:null;
+                }
+            },
+            {
+                title: '退货地址',
+                width: '200px',
+                align: 'center',
+                dataIndex:"afterSalesAddress"
+            },
+            {
                 title: '采购子订单ID',
                 dataIndex: 'pdd_order_sn',
                 width: '245px',
@@ -1373,7 +1409,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
 
     render() {
         const { tabType } = this.props;
-        const { cookieVisible,lastLogData,tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
+        const { cookieVisible,expressList,refundVisible,lastLogData,tagList,tagType,purchaseErrorList,purchaseError,exportLoading1,exportModal,pddCancelReasonList,pddGoodsId,shopName,storeList=[],beatModal,beatPurchaseOrderGoodsId,beatSaleOrderGoodsSn,historyVisible,historySaleOrderGoodsSn, trackModalId, pddOrderCancelType, pddParentOrderSn, showMoreSearch, vovaGoodsIds, orderStatusList, pddOrderStatusList, pddPayStatusList, pddShippingStatusList, exportLoading, searchLoading, refreshLoading, dataLoading, pageNumber, pageSize, total, patBtnLoading, cancelPatBtnLoading, cancelSaleBtnLoading, orderStatus, pddOrderStatus, pddPayStatus, pddShippingStatus, pddShippingNumbers, pddOrderSns, pddSkuIds, orderSns, orderStartTime, orderEndTime, pddOrderStartTime, pddOrderEndTime, dataSet = [], selectedRowKeys } = this.state;
         const rowSelection = {
             fixed: true,
             columnWidth: '50px',
@@ -1549,6 +1585,9 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                             className="button-refresh" onClick={this.onCancelSaleOrder}>
                         取消销售单
                     </Button>
+                    <LoadingButton disabled={selectedRowKeys.length === 0} className="button-refresh" onClick={this.onBatchRefund}>
+                        批量退款
+                    </LoadingButton>
                     <Button className="button-export" loading={exportLoading} onClick={this.onExport}>
                         导出数据
                     </Button>
@@ -1723,6 +1762,7 @@ class TabChild extends React.PureComponent<ITabChildProps, IIndexState> {
                 <BeatServiceModal onSuccess={this.onFilter} visible={beatModal} purchaseOrderGoodsId={beatPurchaseOrderGoodsId} saleOrderGoodsSn={beatSaleOrderGoodsSn} onCancel={this.closeBeatModal}/>
                 <ExportModal visible={exportModal} onCancel={this.onExportCancel} storeList={storeList}/>
                 <CookieModal visible={cookieVisible} onClose={this.closeCookie}/>
+                <RefundModal visible={refundVisible} onClose={()=>this.setState({refundVisible:false})} expressList={expressList}/>
             </div>
         );
     }
